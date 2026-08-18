@@ -24,6 +24,15 @@ const SITE_COOKIE = "__preview_site";
  * previously only worked against `localhost`, which meant the editor's
  * preview broke entirely once deployed — this is the actual fix for that,
  * not a security loosening.
+ *
+ * Uses a custom header, NOT x-forwarded-host: Vercel's own edge network
+ * treats x-forwarded-host as a trusted, infrastructure-owned value (it
+ * reflects the real original host for proxy-trust reasons) and resets it
+ * after middleware runs, silently discarding whatever middleware set it
+ * to — confirmed by testing directly against the deployed instance:
+ * middleware ran (its Set-Cookie showed up), but getSiteHost() still saw
+ * the real host, not the override. A custom header isn't reserved, so
+ * Vercel leaves it alone.
  */
 export function middleware(request: NextRequest) {
   const paramSite = request.nextUrl.searchParams.get("__site");
@@ -32,7 +41,7 @@ export function middleware(request: NextRequest) {
   if (!siteHost) return NextResponse.next();
 
   const headers = new Headers(request.headers);
-  headers.set("x-forwarded-host", siteHost);
+  headers.set("x-preview-site-host", siteHost);
 
   const response = NextResponse.next({ request: { headers } });
   if (paramSite && paramSite !== cookieSite) {

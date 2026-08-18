@@ -35,6 +35,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { PreviewRouteBeacon } from "@/components/dev/PreviewRouteBeacon";
 import { fetchSiteConfig, getSiteHost, resolveTheme } from "@/lib/get-site";
 import { getSiteCategories } from "@/lib/public-catalog";
+import { SiteUnavailable } from "@/components/ui/SiteUnavailable";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -232,7 +233,10 @@ const fontVariables = [
 
 export async function generateMetadata(): Promise<Metadata> {
   const host = await getSiteHost();
+  // Same constraint as the layout itself: a notFound() thrown from metadata
+  // generation for the root layout crashes rather than 404s.
   const config = await fetchSiteConfig(host);
+  if (!config) return { title: "Site unavailable" };
   const theme = resolveTheme(config);
   const siteName = config.site.name || theme.siteName;
   const description =
@@ -260,7 +264,20 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const host = await getSiteHost();
+  // notFound() is illegal here, so resolve the config without it and render
+  // a real explanation when there's nothing to show.
   const config = await fetchSiteConfig(host);
+
+  if (!config) {
+    return (
+      <html lang="en" className={fontVariables}>
+        <body className="min-h-screen antialiased">
+          <SiteUnavailable host={host} />
+        </body>
+      </html>
+    );
+  }
+
   const theme = resolveTheme(config);
   // Header dropdown + mobile drawer need the same real categories as the
   // homepage rail — fetched once per request here, not from sample-data.

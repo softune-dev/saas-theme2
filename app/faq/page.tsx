@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { SystemPageShell } from "@/components/ui/SystemPageShell";
-import { fetchSiteConfig, getSiteHost } from "@/lib/get-site";
+import { getSiteConfig, getSiteHost } from "@/lib/get-site";
 
 export const metadata: Metadata = { title: "FAQ" };
 
 export default async function FaqPage() {
   const host = await getSiteHost();
-  const config = await fetchSiteConfig(host);
+  const config = await getSiteConfig(host);
   const faqs = config.site.faqs ?? [];
 
   return (

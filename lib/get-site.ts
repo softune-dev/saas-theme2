@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import type { PublicSiteConfig, ResolvedPageSeo, Product, SiteEditorSettings } from "./theme-types";
-import { defaultSettings, sampleCategories, sampleProducts } from "./sample-data";
+import { defaultSettings } from "./sample-data";
+import { getSiteCategories, getSiteProducts } from "./public-catalog";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8000";
@@ -22,116 +24,18 @@ export async function getSiteHost(): Promise<string> {
 }
 
 /**
- * Demo-first fallback so this template runs standalone without the API.
- * When a real published site is available, that theme object wins.
+ * Fetch the published site configuration from the backend API
+ * (/public/site/{host}).
+ *
+ * No fake-data fallback here on purpose. A site that genuinely doesn't
+ * exist or isn't published is a 404 on the backend too (see
+ * _find_published_site in app/api/public.py) — rendering fabricated
+ * business content instead would mean a broken/misconfigured deployment
+ * silently shows a fictional store instead of failing loudly.
  */
-function createFallbackSiteConfig(host: string): PublicSiteConfig {
-  const baseUrl = `https://${host}`;
-  const theme = defaultSettings as unknown as Record<string, unknown>;
-
-  const page = (
-    slug: string,
-    path: string,
-    title: string,
-    description: string,
-  ) => ({
-    slug,
-    path,
-    title,
-    seo: {
-      title: slug ? `${title} | ${defaultSettings.siteName}` : `${defaultSettings.siteName} — ${defaultSettings.tagline}`,
-      description,
-      canonical: `${baseUrl}${path === "/" ? "" : path}`,
-      noindex: false,
-      og_image: defaultSettings.heroImages[0] ?? "",
-    },
-  });
-
-  return {
-    site: {
-      id: "fallback-bazaar-site-id",
-      name: defaultSettings.siteName,
-      template_key: "bazaar",
-      framework: "nextjs",
-      theme,
-      business: {
-        name: defaultSettings.siteName,
-        type: "Store",
-        description: defaultSettings.tagline,
-        phone: "+8801700000000",
-        email: "hello@bazaar.example",
-        address: {
-          street: "House 12, Road 5",
-          city: "Dhaka",
-          region: "Dhaka",
-          postal_code: "1209",
-          country: "BD",
-        },
-      },
-      faqs: [
-        {
-          id: "faq-1",
-          question: "How long does delivery take?",
-          answer:
-            "Inside Dhaka typically 1–2 business days; outside Dhaka 2–5 business days depending on your area.",
-        },
-        {
-          id: "faq-2",
-          question: "Do you offer cash on delivery?",
-          answer: "Yes. COD is available on most products. Select it at checkout.",
-        },
-        {
-          id: "faq-3",
-          question: "What is your return policy?",
-          answer:
-            "Eligible items can be returned within 7 days of delivery if unused and in original packaging.",
-        },
-      ],
-      legal: {
-        privacy: {
-          title: "Privacy Policy",
-          content:
-            "We collect only the information needed to fulfill orders (name, phone, address). We do not sell personal data. Payment details are processed securely and never stored on our servers for COD orders.",
-          published: true,
-        },
-        terms: {
-          title: "Terms of Service",
-          content:
-            "By placing an order you agree that product availability and delivery times are estimates. Prices are listed in BDT. Delivery charges follow the area rates configured for each product.",
-          published: true,
-        },
-      },
-    },
-    nav: defaultSettings.navLinks.map((l) => ({
-      title: l.label,
-      path: l.path || "/",
-    })),
-    pages: [
-      page("", "/", "Home", defaultSettings.tagline),
-      page("shop", "/shop", "Shop", "Browse all products"),
-      page("categories", "/categories", "Categories", "Shop by department"),
-      page("cart", "/cart", "Cart", "Your shopping cart"),
-      page("checkout", "/checkout", "Checkout", "Complete your order"),
-      page("about", "/about", "About", "About our marketplace"),
-      page("contact", "/contact", "Contact", "Get in touch"),
-      page("faq", "/faq", "FAQ", "Common questions"),
-      page("privacy", "/privacy", "Privacy", "Privacy policy"),
-      page("terms", "/terms", "Terms", "Terms of service"),
-    ],
-    json_ld: {
-      "@context": "https://schema.org",
-      "@type": "Store",
-      name: defaultSettings.siteName,
-      url: baseUrl,
-      description: defaultSettings.tagline,
-    },
-    updated_at: new Date().toISOString(),
-  };
-}
-
 export async function fetchSiteConfig(
   providedHost?: string,
-): Promise<PublicSiteConfig> {
+): Promise<PublicSiteConfig | null> {
   const host = providedHost || (await getSiteHost());
 
   try {
@@ -140,15 +44,20 @@ export async function fetchSiteConfig(
         ? { cache: "no-store" as const }
         : { next: { revalidate: 60, tags: [`site-${host}`] } }),
     });
-    if (!res.ok) return createFallbackSiteConfig(host);
+    if (!res.ok) return null;
     return (await res.json()) as PublicSiteConfig;
   } catch {
-    return createFallbackSiteConfig(host);
+    return null;
   }
 }
 
+/** Same fetch, but calls notFound() instead of returning null — see
+ * layout.tsx for the one place that needs the raw nullable version
+ * (notFound() is illegal in the root layout). */
 export async function getSiteConfig(providedHost?: string): Promise<PublicSiteConfig> {
-  return fetchSiteConfig(providedHost);
+  const config = await fetchSiteConfig(providedHost);
+  if (!config) notFound();
+  return config;
 }
 
 export function resolveTheme(config: PublicSiteConfig): SiteEditorSettings {
@@ -188,14 +97,6 @@ export async function getPageSeo(
     canonical: `${baseUrl}/${normalized}`.replace(/\/$/, "") || `${baseUrl}/`,
     noindex: false,
   };
-}
-
-export function getDemoProducts(): Product[] {
-  return sampleProducts;
-}
-
-export function getDemoCategories() {
-  return sampleCategories;
 }
 
 export function generateProductJsonLd(product: Product, host: string) {
@@ -241,7 +142,14 @@ export async function getSiteSitemap(providedHost?: string) {
       });
     }
   }
-  for (const cat of sampleCategories) {
+  // Real categories/products, not sample data — a sitemap submitted to
+  // Google with fake product URLs is worse than one that's merely
+  // incomplete.
+  const [categories, products] = await Promise.all([
+    getSiteCategories(host),
+    getSiteProducts(host),
+  ]);
+  for (const cat of categories) {
     entries.push({
       url: `${baseUrl}/shop?category=${cat.slug}`,
       lastModified: new Date(),
@@ -249,7 +157,7 @@ export async function getSiteSitemap(providedHost?: string) {
       priority: 0.7,
     });
   }
-  for (const product of sampleProducts) {
+  for (const product of products) {
     entries.push({
       url: `${baseUrl}/shop/${product.slug}`,
       lastModified: new Date(),

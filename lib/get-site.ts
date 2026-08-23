@@ -47,6 +47,11 @@ export async function fetchSiteConfig(
 
   try {
     const res = await fetch(`${API_BASE_URL}/public/site/${host}`, {
+      // A build-time static-generation call to a slow or unreachable
+      // backend must fail fast, not hang — Vercel gives each page 60s
+      // before retrying (3x) and failing the whole build, and an
+      // AbortSignal-less fetch has no ceiling of its own to stop that.
+      signal: AbortSignal.timeout(10_000),
       ...(process.env.NODE_ENV === "development"
         ? { cache: "no-store" as const }
         : { next: { revalidate: 60, tags: [`site-${host}`] } }),

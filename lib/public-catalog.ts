@@ -118,6 +118,10 @@ function adaptProduct(p: PublicProduct): Product {
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, {
+      // See get-site.ts's fetchSiteConfig for why this needs its own
+      // ceiling: an unresponsive backend during static generation must fail
+      // fast, not hang until Vercel's own 60s-times-3 build timeout.
+      signal: AbortSignal.timeout(10_000),
       ...(process.env.NODE_ENV === "development"
         ? { cache: "no-store" as const }
         : { next: { revalidate: 60 } }),

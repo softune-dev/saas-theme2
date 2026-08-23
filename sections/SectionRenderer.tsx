@@ -8,11 +8,13 @@ import { FeaturesSection } from "./FeaturesSection";
 import { CategoriesSection } from "./CategoriesSection";
 import { FeatureProductsSection } from "./FeatureProductsSection";
 import { WhyChooseUsSection } from "./WhyChooseUsSection";
+import { ProductShowcaseSection } from "./ProductShowcaseSection";
+import { CategoryShowcaseSection } from "./CategoryShowcaseSection";
+import { TestimonialsSection } from "./TestimonialsSection";
+import { BannerCtaSection } from "./BannerCtaSection";
 
 /**
  * Renders home sections in the order from SiteEditorSettings.sections.
- * Intentionally skips testimonials / bannerCta / productShowcase for this
- * catalog-first marketplace skin (still accepted in the type for editor parity).
  *
  * Trust badges (`features`) are forced immediately after the first `hero`
  * even if a draft was seeded with the dashboard's generic section order
@@ -68,24 +70,54 @@ export function SectionRenderer({
             return (
               <CategoriesSection key={sec.id} categories={categories} />
             );
-          // categoryShowcase is a different editor section — don't re-use the
-          // same grid as "categories" or it doubles the category tiles too.
           case "categoryShowcase":
-            return null;
+            return (
+              <CategoryShowcaseSection
+                key={sec.id}
+                categoryShowcaseTitle={settings.categoryShowcaseTitle ?? ""}
+                categoryShowcaseCategoryIds={settings.categoryShowcaseCategoryIds ?? []}
+                categories={categories}
+                products={products}
+              />
+            );
           case "featureProducts":
             return (
               <FeatureProductsSection key={sec.id} products={products} />
+            );
+          case "productShowcase":
+            return (
+              <ProductShowcaseSection
+                key={sec.id}
+                showcaseProductId={settings.showcaseProductId ?? ""}
+                products={products}
+              />
+            );
+          case "testimonials":
+            return (
+              <TestimonialsSection
+                key={sec.id}
+                testimonialsTitle={settings.testimonialsTitle ?? ""}
+                testimonials={settings.testimonials ?? []}
+              />
+            );
+          case "bannerCta":
+            return (
+              <BannerCtaSection
+                key={sec.id}
+                ctaTitle={settings.ctaTitle ?? ""}
+                ctaBody={settings.ctaBody ?? ""}
+                ctaButton={settings.ctaButton ?? ""}
+              />
             );
           case "whyChooseUs":
             return <WhyChooseUsSection key={sec.id} />;
           case "footer":
             footerRendered = true;
             return <Footer key={sec.id} />;
-          // Explicit no-ops — product-catalog-first skin
+          // "banner" is a separate editor type in Aurora (a top announcement
+          // marquee variant of hero) that bazaar's marketplace hero doesn't
+          // have a distinct rendering for — no-op, not a gap.
           case "banner":
-          case "testimonials":
-          case "bannerCta":
-          case "productShowcase":
             return null;
           default:
             return null;

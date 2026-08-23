@@ -204,6 +204,16 @@ export type PublicSitePage = {
   seo: ResolvedPageSeo;
 };
 
+export type PublicPaymentMethod = {
+  provider: "cod" | "manual" | "bkash" | "nagad" | "sslcommerz" | "rocket";
+  label: string;
+  config: {
+    cod_fee_cents?: number;
+    payment_number?: string;
+    wallets?: ("bkash" | "nagad" | "rocket")[];
+  };
+};
+
 export type PublicSiteConfig = {
   site: {
     id: string;
@@ -245,6 +255,7 @@ export type PublicSiteConfig = {
       privacy?: { title: string; content: string; published: boolean };
       terms?: { title: string; content: string; published: boolean };
     };
+    payment_methods?: PublicPaymentMethod[];
   };
   nav: { title: string; path: string }[];
   pages: PublicSitePage[];

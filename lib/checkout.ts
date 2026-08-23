@@ -1,0 +1,72 @@
+/**
+ * Real checkout submission — POST /public/site/{host}/orders (app/api/public.py).
+ *
+ * Prices and the delivery fee are computed server-side from the real product
+ * rows; this only sends product_id/quantity, never a price the browser could
+ * tamper with. See CartContext.tsx for the client-side delivery fee preview
+ * shown before submit — the server recomputes it independently and that's
+ * the number that actually gets charged.
+ */
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "http://localhost:8000";
+
+export type PublicOrderItemIn = {
+  product_id: string;
+  quantity: number;
+};
+
+export type CheckoutCustomer = {
+  first_name: string;
+  last_name: string;
+  /** BD mobile number only — validated both client-side (isValidBdPhone in
+   * CheckoutPageClient.tsx) and server-side (_validate_bd_phone in
+   * app/api/public.py, the real gate). */
+  phone: string;
+  address: string;
+  city: string;
+  zip: string;
+};
+
+export type PublicOrderItemOut = {
+  name: string;
+  quantity: number;
+  unit_price_cents: number;
+  total_cents: number;
+};
+
+export type PublicOrderOut = {
+  order_number: string;
+  items: PublicOrderItemOut[];
+  subtotal_cents: number;
+  shipping_cents: number;
+  total_cents: number;
+  currency: string;
+  delivery_location: string | null;
+  created_at: string;
+};
+
+export async function submitOrder(
+  host: string,
+  payload: {
+    items: PublicOrderItemIn[];
+    customer: CheckoutCustomer;
+    delivery_location: string | null;
+    payment_method: string;
+    /** Required by the backend when payment_method is "manual". */
+    transaction_id?: string;
+  },
+): Promise<PublicOrderOut> {
+  const res = await fetch(`${API_BASE_URL}/public/site/${host}/orders`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || "Couldn't place your order. Please try again.");
+  }
+  return res.json() as Promise<PublicOrderOut>;
+}

@@ -58,7 +58,7 @@ export function HeroSection({
     <section className="mx-auto max-w-[1280px] px-3 py-3 sm:px-4 sm:py-4">
       <div className="flex items-stretch overflow-hidden rounded-xl border border-[var(--border)] bg-white">
         {/* Rail stretches to banner height; View all sits at the bottom */}
-        <aside className="hidden w-[15.5rem] shrink-0 flex-col border-r border-[var(--border)] lg:flex xl:w-64">
+        <aside className="hidden w-52 shrink-0 flex-col border-r border-[var(--border)] lg:flex xl:w-56">
           <ul className="min-h-0 flex-1 overflow-y-auto">
             {categories.map((cat) => (
               <li key={cat.id} className="border-b border-[var(--border)]">

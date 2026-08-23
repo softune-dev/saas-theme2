@@ -30,13 +30,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
   const host = await getSiteHost();
-  const product = await getSiteProduct(host, slug);
-  if (!product) notFound();
-
-  const [allProducts, categories] = await Promise.all([
+  // All three fetches are independent — only the notFound() gate and the
+  // related-products filter below actually depend on `product`'s value, not
+  // on fetch order. Firing them together instead of awaiting the product
+  // first removes a real waterfall (was: 1 fetch, then 2 more after it).
+  const [product, allProducts, categories] = await Promise.all([
+    getSiteProduct(host, slug),
     getSiteProducts(host),
     getSiteCategories(host),
   ]);
+  if (!product) notFound();
+
   const related = allProducts.filter(
     (p) => p.id !== product.id && p.categoryId === product.categoryId,
   );

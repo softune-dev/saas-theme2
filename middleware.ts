@@ -45,7 +45,19 @@ export function middleware(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers } });
   if (paramSite && paramSite !== cookieSite) {
-    response.cookies.set(SITE_COOKIE, paramSite, { path: "/", httpOnly: false });
+    // sameSite: "none" + secure is required for this cookie to survive at
+    // all — it's set and read from inside a cross-site iframe (dashboard on
+    // one origin, this app on another), and the default SameSite=Lax a
+    // cookie gets without this is dropped on exactly that kind of request.
+    // Without it, every in-preview client-side navigation (clicking a
+    // link inside the iframe, which carries no ?__site=) silently lost the
+    // site override and 404'd.
+    response.cookies.set(SITE_COOKIE, paramSite, {
+      path: "/",
+      httpOnly: false,
+      sameSite: "none",
+      secure: true,
+    });
   }
   return response;
 }

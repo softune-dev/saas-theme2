@@ -251,10 +251,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(`https://${host}`),
-    title: {
-      default: seo.title,
-      template: `%s | ${siteName}`,
-    },
+    // No title.template here: every page's own generateMetadata already
+    // returns a fully-composed title (getPageSeo()'s title, or e.g.
+    // `${product.name} | ${siteName}` on the product page) — a template
+    // would suffix the site name onto an already-suffixed string, producing
+    // "Home | Niyenen | Niyenen".
+    title: seo.title,
     description: seo.description,
     keywords: seo.keywords || undefined,
     alternates: { canonical: seo.canonical },

@@ -101,7 +101,7 @@ export type SiteEditorSettings = {
   feature2IconKind: "icon" | "image"; feature2Icon: string; feature2Image: string;
   feature3Title: string; feature3: string;
   feature3IconKind: "icon" | "image"; feature3Icon: string; feature3Image: string;
-  testimonialsTitle: string; testimonials: EditorTestimonial[];
+  testimonialsMode?: "cards" | "images"; testimonialsTitle: string; testimonials: EditorTestimonial[];
   ctaTitle: string; ctaBody: string; ctaButton: string;
   // Footer — Newsletter column is fixed (no editable fields) by design.
   footerDescription: string;

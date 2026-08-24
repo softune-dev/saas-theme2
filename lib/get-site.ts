@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { PublicSiteConfig, ResolvedPageSeo, Product, SiteEditorSettings } from "./theme-types";
@@ -108,6 +109,42 @@ export async function getPageSeo(
     description: config.site.business?.description || defaultSettings.tagline,
     canonical: `${baseUrl}/${normalized}`.replace(/\/$/, "") || `${baseUrl}/`,
     noindex: false,
+  };
+}
+
+/** Turns a resolved page SEO block into real Next.js Metadata — every page
+ * used to hand-write its own `{ title: "..." }`, which meant a static
+ * label with no site name suffix (About/FAQ/Terms/...) or, worse, no
+ * metadata at all (Contact), silently inheriting whatever the root layout
+ * happened to render for a completely different page. Real merchant-entered
+ * values (Site Settings → SEO) flow through automatically once a page uses
+ * this instead. */
+export function buildMetadata(seo: ResolvedPageSeo): Metadata {
+  return {
+    // { absolute } opts out of any title.template a parent layout sets —
+    // seo.title already has the merchant's title_suffix appended
+    // server-side (app/api/public.py's _resolve_seo), so without this a
+    // template would double-suffix it.
+    title: { absolute: seo.title },
+    description: seo.description,
+    keywords: seo.keywords || undefined,
+    alternates: { canonical: seo.canonical },
+    openGraph: {
+      title: seo.og_title || seo.title,
+      description: seo.og_description || seo.description,
+      url: seo.canonical,
+      images: seo.og_image ? [{ url: seo.og_image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.og_title || seo.title,
+      description: seo.og_description || seo.description,
+      images: seo.og_image ? [seo.og_image] : undefined,
+    },
+    robots: {
+      index: !seo.noindex,
+      follow: !seo.noindex,
+    },
   };
 }
 

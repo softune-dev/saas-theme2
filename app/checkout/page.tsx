@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { getSiteHost, getSiteConfig } from "@/lib/get-site";
+import { buildMetadata, getPageSeo, getSiteHost, getSiteConfig } from "@/lib/get-site";
 import { CheckoutPageClient } from "./CheckoutPageClient";
 
-export const metadata: Metadata = { title: "Checkout" };
+export async function generateMetadata(): Promise<Metadata> {
+  const host = await getSiteHost();
+  const seo = await getPageSeo("checkout", host);
+  return buildMetadata(seo);
+}
 
 export default async function CheckoutPage() {
   const host = await getSiteHost();

@@ -2,43 +2,28 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, Star } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingCart } from "lucide-react";
 import type { Product } from "@/lib/theme-types";
 import { formatTaka } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
 
-function StarRow({ rating }: { rating: number }) {
-  const filled = Math.min(5, Math.max(0, Math.round(rating)));
-  return (
-    <span
-      className="inline-flex items-center gap-0.5"
-      aria-label={`${rating} out of 5 stars`}
-    >
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={[
-            "size-3",
-            i < filled
-              ? "fill-amber-400 text-amber-400"
-              : "fill-transparent text-[var(--border)]",
-          ].join(" ")}
-          strokeWidth={1.5}
-        />
-      ))}
-    </span>
-  );
-}
-
 /**
  * Marketplace product card:
- * image → name → price + compare-at beside it → stars + reviews
- * cart icon bottom-right.
+ * image → name → price + compare-at beside it → Order Now button
+ * cart icon bottom-right. No review stars/count — real reviews aren't
+ * built yet, so this never shows a fabricated rating.
  */
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const hasCompare =
     !!product.originalPrice && product.originalPrice > product.price;
+
+  function handleOrderNow() {
+    addItem(product, 1);
+    router.push("/checkout");
+  }
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-white">
@@ -76,12 +61,13 @@ export function ProductCard({ product }: { product: Product }) {
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1.5 pt-0.5">
-          <StarRow rating={product.rating} />
-          <span className="text-[11px] text-[var(--muted-foreground)]">
-            ({product.reviewCount.toLocaleString()})
-          </span>
-        </div>
+        <button
+          type="button"
+          onClick={handleOrderNow}
+          className="mt-1 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+        >
+          Order Now
+        </button>
       </div>
 
       <button

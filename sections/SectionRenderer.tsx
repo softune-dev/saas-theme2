@@ -96,6 +96,7 @@ export function SectionRenderer({
             return (
               <TestimonialsSection
                 key={sec.id}
+                testimonialsMode={settings.testimonialsMode}
                 testimonialsTitle={settings.testimonialsTitle ?? ""}
                 testimonials={settings.testimonials ?? []}
               />

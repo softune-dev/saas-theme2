@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { SystemPageShell } from "@/components/ui/SystemPageShell";
-import { getSiteConfig, getSiteHost } from "@/lib/get-site";
+import { buildMetadata, getPageSeo, getSiteConfig, getSiteHost } from "@/lib/get-site";
 
-export const metadata: Metadata = { title: "Terms of Service" };
+export async function generateMetadata(): Promise<Metadata> {
+  const host = await getSiteHost();
+  const seo = await getPageSeo("terms", host);
+  return buildMetadata(seo);
+}
 
 export default async function TermsPage() {
   const host = await getSiteHost();

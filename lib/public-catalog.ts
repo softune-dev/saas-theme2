@@ -46,7 +46,7 @@ type PublicProduct = {
   inStock: boolean;
   stockCount: number;
   attributes: Record<string, unknown>;
-  features: { title: string; description: string }[];
+  features: { title: string; description: string; icon?: string | null }[];
   freeDelivery: boolean;
   deliveryCharges: { name: string; charge: number }[];
 };
@@ -78,28 +78,34 @@ function stripHtml(html: string, maxLength = 160): string {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
-/** Map size/color variants by type name. Color hex is derived client-side
- * from the merchant-typed name (lib/color-names.ts) — nothing stores hex. */
+/** The color variant is found by its real isColor flag FIRST — a merchant
+ * can name a color-marked type anything ("Shade", "Finish"), not just
+ * literally "Color" — falling back to matching the literal name "color"
+ * only for products saved before isColor existed. A real merchant-picked
+ * hex (set via the dashboard's color wheel) is used when present;
+ * colorNameToHex (lib/color-names.ts) only covers products saved before
+ * that existed. */
 function adaptProduct(p: PublicProduct): Product {
   const variants = p.attributes?.variants as
-    | { type: string; values: { value: string }[] }[]
+    | { type: string; isColor?: boolean; values: { value: string; hex?: string; image?: string }[] }[]
     | undefined;
   const sizeVariant = variants?.find(
     (v) => v.type.trim().toLowerCase() === "size",
   );
-  const colorVariant = variants?.find(
-    (v) => v.type.trim().toLowerCase() === "color",
-  );
+  const colorVariant =
+    variants?.find((v) => v.isColor) ??
+    variants?.find((v) => v.type.trim().toLowerCase() === "color");
   // Fallback: if no typed "size" row, first non-color variant still drives sizes
   // so older products keep working.
   const fallbackSize =
     sizeVariant ??
-    variants?.find((v) => v.type.trim().toLowerCase() !== "color");
+    variants?.find((v) => v !== colorVariant && v.type.trim().toLowerCase() !== "color");
   const sizes = fallbackSize?.values.map((v) => v.value) ?? [];
   const sizeLabel = fallbackSize?.type;
   const colors = colorVariant?.values.map((v) => ({
     name: v.value,
-    hex: colorNameToHex(v.value),
+    hex: v.hex || colorNameToHex(v.value),
+    image: v.image,
   }));
   const colorLabel = colorVariant?.type;
   const discountPercent =

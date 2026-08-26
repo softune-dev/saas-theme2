@@ -134,6 +134,10 @@ export type ProductVariant = {
 export type ProductFeatureHighlight = {
   title: string;
   description: string;
+  /** lucide-react icon name the merchant picked (same picker as category
+   * icons) — falls back to a neutral default icon when unset, never a guess
+   * derived from the title text. */
+  icon?: string | null;
 };
 
 export type Product = {
@@ -168,7 +172,10 @@ export type Product = {
   sizes?: string[];
   /** Merchant's variant type label for sizes (e.g. "Size"). */
   sizeLabel?: string;
-  colors?: { name: string; hex: string }[];
+  /** hex is a real merchant-picked color when present; only falls back to a
+   * name-based guess for products saved before that existed. image, when
+   * set, swaps the main product photo when this color is selected. */
+  colors?: { name: string; hex: string; image?: string }[];
   /** Merchant's variant type label for colors (e.g. "Color"). */
   colorLabel?: string;
   /** True = no delivery charge for this product, ever. False + empty

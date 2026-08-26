@@ -5,20 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Award,
-  Gem,
-  Heart,
-  Leaf,
-  Minus,
-  Package,
-  Plus,
-  ShieldCheck,
-  ShoppingBag,
-  Sparkles,
-  Star,
-  Truck,
-} from "lucide-react";
+import { Minus, Plus, ShoppingBag, Star, Truck } from "lucide-react";
+import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import type { Product } from "@/lib/theme-types";
 import { formatTaka, calculateDiscount } from "@/lib/utils";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -26,16 +14,9 @@ import { ProductReviews } from "@/components/product/ProductReviews";
 import { useCart } from "@/components/cart/CartContext";
 import { Footer } from "@/components/footer/Footer";
 
-const FEATURE_ICONS = [
-  Package,
-  ShieldCheck,
-  Heart,
-  Truck,
-  Leaf,
-  Award,
-  Sparkles,
-  Gem,
-];
+// Neutral fallback for a feature added before icon-picking existed (or left
+// unset) — never a guess derived from the title text.
+const DEFAULT_FEATURE_ICON: IconName = "star";
 
 /**
  * Marketplace PDP: gallery + buy panel, features, details, related.
@@ -62,6 +43,10 @@ export function ProductDetailClient({
   const [selectedColor, setSelectedColor] = useState<string | undefined>(
     product.colors?.[0]?.name,
   );
+  // A color value with its own photo (dashboard variant image) overrides the
+  // main stage — set only on an explicit swatch click, cleared the moment a
+  // gallery thumbnail (or a color with no photo) is picked.
+  const [colorImage, setColorImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
   const discount =
@@ -134,9 +119,9 @@ export function ProductDetailClient({
             transition={{ duration: 0.4 }}
             className="relative aspect-square overflow-hidden rounded-2xl bg-white"
           >
-            {product.images[activeImage] || product.images[0] ? (
+            {colorImage || product.images[activeImage] || product.images[0] ? (
               <Image
-                src={product.images[activeImage] || product.images[0]}
+                src={colorImage || product.images[activeImage] || product.images[0]}
                 alt={product.name}
                 fill
                 priority
@@ -157,7 +142,10 @@ export function ProductDetailClient({
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setActiveImage(idx)}
+                  onClick={() => {
+                    setActiveImage(idx);
+                    setColorImage(null);
+                  }}
                   className={[
                     "relative size-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white sm:size-[4.5rem]",
                     activeImage === idx
@@ -274,7 +262,10 @@ export function ProductDetailClient({
                   <button
                     key={c.name}
                     type="button"
-                    onClick={() => setSelectedColor(c.name)}
+                    onClick={() => {
+                      setSelectedColor(c.name);
+                      setColorImage(c.image || null);
+                    }}
                     aria-label={c.name}
                     title={c.name}
                     className={[
@@ -414,10 +405,11 @@ export function ProductDetailClient({
           {features.length > 0 ? (
             <div className="grid gap-8 text-left sm:grid-cols-3 sm:gap-10">
               {features.map((feature, i) => {
-                const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length] ?? Star;
+                const iconName = (feature.icon as IconName) || DEFAULT_FEATURE_ICON;
                 return (
                   <div key={i} className="space-y-2.5">
-                    <Icon
+                    <DynamicIcon
+                      name={iconName}
                       strokeWidth={1.5}
                       className="size-6 text-[var(--brand)]"
                     />

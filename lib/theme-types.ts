@@ -166,7 +166,11 @@ export type Product = {
     dimensions?: string;
   };
   sizes?: string[];
+  /** Merchant's variant type label for sizes (e.g. "Size"). */
+  sizeLabel?: string;
   colors?: { name: string; hex: string }[];
+  /** Merchant's variant type label for colors (e.g. "Color"). */
+  colorLabel?: string;
   /** True = no delivery charge for this product, ever. False + empty
    * deliveryCharges = the merchant hasn't set delivery pricing yet — treat
    * as "unknown", not as free. */
@@ -221,6 +225,12 @@ export type PublicSiteConfig = {
     template_key: string;
     framework: string;
     theme?: Record<string, any>;
+    /** Site Settings → About Us (image, heading, story paragraphs). */
+    about?: {
+      heading?: string;
+      image?: string;
+      paragraphs?: string[];
+    };
     business?: {
       name?: string;
       type?: string;

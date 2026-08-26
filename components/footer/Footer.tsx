@@ -9,12 +9,18 @@ export function Footer() {
 
   return (
     <footer className="mt-auto border-t border-[var(--border)] bg-white">
-      <div className="mx-auto grid max-w-[1280px] gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-3 sm:col-span-2 lg:col-span-1">
+      <div className="mx-auto grid max-w-[1280px] gap-8 px-4 py-10 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4">
+        <div className="flex flex-col items-center space-y-3 sm:col-span-2 sm:items-start lg:col-span-1">
           <SiteLogo />
           <p className="max-w-xs text-sm leading-relaxed text-[var(--muted-foreground)]">
             {settings.footerDescription || settings.tagline}
           </p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/payment.png"
+            alt="Accepted payment methods"
+            className="mt-2 h-auto w-full max-w-[280px] object-contain object-center sm:max-w-[320px] sm:object-left"
+          />
         </div>
 
         <div>

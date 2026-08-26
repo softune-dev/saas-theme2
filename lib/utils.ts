@@ -25,8 +25,12 @@ export function formatPrice(amount: number, useBanglaDigits: boolean = false): s
   return `৳${formatted}`;
 }
 
+/** Whole taka only — never show trailing .00 on storefront prices. */
 export function formatTaka(amount: number): string {
-  return `৳${new Intl.NumberFormat("en-IN").format(amount)}`;
+  return `৳${new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+  }).format(Math.round(amount))}`;
 }
 
 export function calculateDiscount(price: number, originalPrice?: number): number {

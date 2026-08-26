@@ -47,6 +47,24 @@ export const BODY_FONTS: Record<string, string> = {
   "nunito-sans": "var(--font-nunito-sans)",
 };
 
+/** White on dark brand, black on light — one brightness threshold, no libraries. */
+function brandForeground(hex: string): "#ffffff" | "#000000" {
+  const raw = hex.trim().replace("#", "");
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw;
+  if (full.length !== 6 || /[^0-9a-fA-F]/.test(full)) return "#ffffff";
+  const r = parseInt(full.slice(0, 2), 16);
+  const g = parseInt(full.slice(2, 4), 16);
+  const b = parseInt(full.slice(4, 6), 16);
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 160 ? "#000000" : "#ffffff";
+}
+
 export function ThemeProvider({
   children,
   initialSettings = defaultSettings,
@@ -78,12 +96,18 @@ export function ThemeProvider({
   // renders with (--brand for buttons/accents, --foreground for text,
   // --background for page/button-contrast surface) — see globals.css. The
   // editor labels them "Primary" / "Text" / "Surface".
+  // --brand-fg is derived: white on dark brand, black on light brand.
   useEffect(() => {
     const root = document.documentElement;
     // Author !important on an inline style beats any stylesheet rule, so the
     // merchant's chosen colors can never lose to a template default.
     if (settings.primaryColor) {
       root.style.setProperty("--brand", settings.primaryColor, "important");
+      root.style.setProperty(
+        "--brand-fg",
+        brandForeground(settings.primaryColor),
+        "important",
+      );
     }
     if (settings.accentColor) {
       root.style.setProperty("--foreground", settings.accentColor, "important");
@@ -104,19 +128,24 @@ export function ThemeProvider({
     // else is a literal Google Font family name picked from the editor's
     // full-library search — load it at runtime and apply the family name
     // directly. Unrecognised/empty keeps whatever globals.css defaults to.
+    // var(--font-bengali) (Noto Sans Bengali, loaded in layout.tsx) is
+    // appended after every merchant font choice below — CSS font fallback
+    // is per-glyph, so it only supplies Bangla characters the chosen Latin
+    // font doesn't have. The merchant's actual pick still renders every
+    // Latin character exactly as before; nothing here changes for them.
     const displayVar = DISPLAY_FONTS[settings.displayFont ?? ""];
     if (displayVar) {
-      root.style.setProperty("--font-display", displayVar, "important");
+      root.style.setProperty("--font-display", `${displayVar}, var(--font-bengali)`, "important");
     } else if (settings.displayFont) {
       ensureGoogleFont(settings.displayFont);
-      root.style.setProperty("--font-display", `"${settings.displayFont}", serif`, "important");
+      root.style.setProperty("--font-display", `"${settings.displayFont}", var(--font-bengali), serif`, "important");
     }
     const bodyVar = BODY_FONTS[settings.bodyFont ?? ""];
     if (bodyVar) {
-      root.style.setProperty("--font-sans", bodyVar, "important");
+      root.style.setProperty("--font-sans", `${bodyVar}, var(--font-bengali)`, "important");
     } else if (settings.bodyFont) {
       ensureGoogleFont(settings.bodyFont);
-      root.style.setProperty("--font-sans", `"${settings.bodyFont}", sans-serif`, "important");
+      root.style.setProperty("--font-sans", `"${settings.bodyFont}", var(--font-bengali), sans-serif`, "important");
     }
   }, [
     settings.primaryColor,

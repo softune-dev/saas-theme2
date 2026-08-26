@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { buildMetadata, getPageSeo, getSiteConfig, getSiteHost } from "@/lib/get-site";
+import {
+  buildMetadata,
+  getPageSeo,
+  getSiteConfig,
+  getSiteHost,
+} from "@/lib/get-site";
 import { ContactPageClient } from "./ContactPageClient";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,7 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ContactPage() {
   const host = await getSiteHost();
   const config = await getSiteConfig(host);
-  const business = config.site.business ?? {};
 
-  return <ContactPageClient phone={business.phone ?? ""} email={business.email ?? ""} />;
+  return (
+    <ContactPageClient business={config.site.business ?? {}} host={host} />
+  );
 }

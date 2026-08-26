@@ -12,6 +12,7 @@
  * working unchanged — only the sections that fetch/select products need to
  * change at all.
  */
+import { colorNameToHex } from "./color-names";
 import { Product, ProductCategory } from "./theme-types";
 
 const API_BASE_URL =
@@ -77,13 +78,30 @@ function stripHtml(html: string, maxLength = 160): string {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
 }
 
-/** First variant type's values become `sizes` — the closest existing field
- * to "the attribute a shopper picks before adding to bag." */
+/** Map size/color variants by type name. Color hex is derived client-side
+ * from the merchant-typed name (lib/color-names.ts) — nothing stores hex. */
 function adaptProduct(p: PublicProduct): Product {
   const variants = p.attributes?.variants as
     | { type: string; values: { value: string }[] }[]
     | undefined;
-  const sizes = variants?.[0]?.values.map((v) => v.value) ?? [];
+  const sizeVariant = variants?.find(
+    (v) => v.type.trim().toLowerCase() === "size",
+  );
+  const colorVariant = variants?.find(
+    (v) => v.type.trim().toLowerCase() === "color",
+  );
+  // Fallback: if no typed "size" row, first non-color variant still drives sizes
+  // so older products keep working.
+  const fallbackSize =
+    sizeVariant ??
+    variants?.find((v) => v.type.trim().toLowerCase() !== "color");
+  const sizes = fallbackSize?.values.map((v) => v.value) ?? [];
+  const sizeLabel = fallbackSize?.type;
+  const colors = colorVariant?.values.map((v) => ({
+    name: v.value,
+    hex: colorNameToHex(v.value),
+  }));
+  const colorLabel = colorVariant?.type;
   const discountPercent =
     p.compareAtPrice && p.compareAtPrice > p.price
       ? Math.round((1 - p.price / p.compareAtPrice) * 100)
@@ -112,6 +130,9 @@ function adaptProduct(p: PublicProduct): Product {
     freeDelivery: p.freeDelivery,
     deliveryCharges: p.deliveryCharges ?? [],
     sizes,
+    sizeLabel,
+    colors,
+    colorLabel,
   };
 }
 

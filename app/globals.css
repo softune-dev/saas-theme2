@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* var(--font-bengali) only supplies glyphs the chosen Latin font lacks
+     (Bangla script) — CSS font-family fallback is per-glyph, so Latin text
+     stays on Outfit/Inter untouched; only Bangla characters fall through. */
+  --font-display: var(--font-outfit), var(--font-bengali), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-bengali), ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -20,6 +23,8 @@
   --muted-foreground: #64748b;
   --border: #e2e8f0;
   --brand: #2563eb;
+  /* Text/icons on brand fills — ThemeProvider flips to #000 on light primaries. */
+  --brand-fg: #ffffff;
   --theme-btn-radius: 0.75rem;
   --theme-primary: var(--brand);
   --theme-accent: var(--foreground);
@@ -103,7 +108,8 @@ h4,
 .animate-marquee-rtl {
   display: flex;
   width: max-content;
-  animation: marquee-rtl 32s linear infinite;
+  /* Match Aurora's slow ticker — fast scroll reads as noise on a marketplace hero. */
+  animation: marquee-rtl 100s linear infinite;
   will-change: transform;
 }
 

@@ -5,7 +5,13 @@ import { Product, CartItem } from "@/lib/theme-types";
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, selectedSize?: string, selectedColor?: string) => void;
+  addItem: (
+    product: Product,
+    quantity?: number,
+    selectedSize?: string,
+    selectedColor?: string,
+    options?: { openDrawer?: boolean },
+  ) => void;
   removeItem: (productId: string, selectedSize?: string, selectedColor?: string) => void;
   updateQuantity: (productId: string, quantity: number, selectedSize?: string, selectedColor?: string) => void;
   clearCart: () => void;
@@ -88,7 +94,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     product: Product,
     quantity: number = 1,
     selectedSize?: string,
-    selectedColor?: string
+    selectedColor?: string,
+    options?: { openDrawer?: boolean },
   ) => {
     setItems((prev) => {
       const index = prev.findIndex(
@@ -118,7 +125,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ];
     });
 
-    setIsDrawerOpen(true);
+    // Buy Now / Order Now skip the drawer and go straight to checkout.
+    if (options?.openDrawer !== false) {
+      setIsDrawerOpen(true);
+    }
   };
 
   const removeItem = (

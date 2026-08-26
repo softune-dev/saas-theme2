@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Truck, CreditCard } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, Copy, Package } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import { formatTaka } from "@/lib/utils";
 import { Footer } from "@/components/footer/Footer";
@@ -27,6 +28,14 @@ const PAYMENT_LABELS: Record<PublicPaymentMethod["provider"], string> = {
   nagad: "Nagad",
   sslcommerz: "SSLCommerz",
   rocket: "Rocket",
+};
+
+/** Storefront logos for checkout payment UI (public/assets). */
+const WALLET_LOGOS: Record<string, string> = {
+  bkash: "/assets/bkash.webp",
+  nagad: "/assets/nagad.webp",
+  cod: "/assets/cod.webp",
+  manual: "/assets/manual.webp",
 };
 
 export function CheckoutPageClient({
@@ -63,6 +72,7 @@ export function CheckoutPageClient({
   const [transactionId, setTransactionId] = useState("");
   const [txnIdError, setTxnIdError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [paymentNumberCopied, setPaymentNumberCopied] = useState(false);
   const [order, setOrder] = useState<PublicOrderOut | null>(null);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,56 +144,10 @@ export function CheckoutPageClient({
     );
   }
 
-  if (order) {
-    return (
-      <>
-        <div className="mx-auto flex min-h-[70vh] max-w-[480px] flex-col items-center justify-center px-4 py-16 text-center">
-          <div className="flex size-14 items-center justify-center rounded-full bg-[var(--brand)]/10 text-2xl text-[var(--brand)]">
-            ✓
-          </div>
-          {logoUrl ? (
-            <div className="relative mt-4 h-8 w-28">
-              <Image src={logoUrl} alt={siteName} fill className="object-contain" />
-            </div>
-          ) : null}
-          <h1 className="mt-4 font-display text-2xl font-semibold text-[var(--foreground)]">
-            Order placed
-          </h1>
-          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-            Order #{order.order_number} — we&apos;ll confirm by phone shortly.
-          </p>
-
-          <div className="mt-6 w-full space-y-2 rounded-xl border border-[var(--border)] bg-white p-5 text-left text-sm">
-            {order.items.map((i, idx) => (
-              <div key={`${i.name}-${idx}`} className="flex justify-between gap-4">
-                <span className="truncate text-[var(--foreground)]">
-                  {i.quantity}x {i.name}
-                </span>
-                <span className="tabular-nums font-medium">{formatTaka(i.total_cents / 100)}</span>
-              </div>
-            ))}
-            <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-2 text-[var(--muted-foreground)]">
-              <span>Shipping</span>
-              <span className="tabular-nums">{formatTaka(order.shipping_cents / 100)}</span>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-[var(--border)] pt-2 text-base font-semibold text-[var(--foreground)]">
-              <span>Total</span>
-              <span className="tabular-nums text-[var(--brand)]">{formatTaka(order.total_cents / 100)}</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCloseReceipt}
-            className="mt-6 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-white"
-          >
-            Back to home
-          </button>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  const paymentLabel = paymentMethod
+    ? PAYMENT_LABELS[paymentMethod as PublicPaymentMethod["provider"]] ||
+      paymentMethod
+    : "—";
 
   return (
     <>
@@ -359,6 +323,7 @@ export function CheckoutPageClient({
                 <div className="mt-3 space-y-2">
                   {checkoutReadyMethods.map((method) => {
                     const selected = paymentMethod === method.provider;
+                    const isManual = method.provider === "manual";
                     return (
                       <label
                         key={method.provider}
@@ -384,43 +349,127 @@ export function CheckoutPageClient({
                               <p className="font-medium text-[var(--foreground)]">
                                 {method.label || PAYMENT_LABELS[method.provider]}
                               </p>
-                              {selected && method.provider === "manual" && method.config.payment_number ? (
-                                <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                                  Send payment to{" "}
-                                  <strong className="text-[var(--foreground)]">
-                                    {method.config.payment_number}
-                                  </strong>
-                                  {method.config.wallets?.length
-                                    ? ` via ${method.config.wallets.join(", ")}`
-                                    : ""}
-                                  , then enter your transaction ID below.
+                              {method.provider === "cod" ? (
+                                <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">
+                                  Pay when your order arrives
                                 </p>
                               ) : null}
                             </div>
                           </div>
-                          {method.provider === "cod" ? (
-                            <Truck strokeWidth={1.5} className="size-5 shrink-0 text-[var(--muted-foreground)]" />
-                          ) : (
-                            <CreditCard strokeWidth={1.5} className="size-5 shrink-0 text-[var(--muted-foreground)]" />
-                          )}
-                        </div>
-                        {selected && method.provider === "manual" ? (
-                          <div className="mt-3 pl-7" onClick={(e) => e.stopPropagation()}>
-                            <input
-                              type="text"
-                              autoComplete="off"
-                              placeholder="Transaction ID"
-                              value={transactionId}
-                              required={paymentMethod === "manual"}
-                              onChange={(e) => {
-                                setTransactionId(e.target.value);
-                                if (txnIdError) setTxnIdError(null);
-                              }}
-                              className="w-full rounded-lg border border-[var(--border)] bg-[var(--muted)] px-3 py-2.5 text-sm outline-none focus:border-[var(--brand)]"
+                          {WALLET_LOGOS[method.provider] ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={WALLET_LOGOS[method.provider]}
+                              alt=""
+                              className="h-7 w-auto shrink-0 object-contain"
                             />
-                            {txnIdError ? (
-                              <p className="mt-1.5 text-xs text-rose-600">{txnIdError}</p>
+                          ) : null}
+                        </div>
+
+                        {selected && isManual ? (
+                          <div
+                            className="mt-3 space-y-3 rounded-xl border border-[var(--border)] bg-[var(--muted)] p-3"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
+                          >
+                            {method.config.payment_number ? (
+                              <div>
+                                <p className="text-xs font-medium text-[var(--muted-foreground)]">
+                                  Send payment to
+                                </p>
+                                <div className="mt-1 flex items-center gap-2">
+                                  <p className="text-lg font-semibold text-[var(--foreground)]">
+                                    {method.config.payment_number}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    aria-label={
+                                      paymentNumberCopied
+                                        ? "Copied"
+                                        : "Copy payment number"
+                                    }
+                                    onClick={async (e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const number = method.config.payment_number;
+                                      if (!number) return;
+                                      try {
+                                        await navigator.clipboard.writeText(number);
+                                        setPaymentNumberCopied(true);
+                                        window.setTimeout(
+                                          () => setPaymentNumberCopied(false),
+                                          1500,
+                                        );
+                                      } catch {
+                                        /* clipboard may be blocked; number stays visible to copy manually */
+                                      }
+                                    }}
+                                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-white text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+                                  >
+                                    {paymentNumberCopied ? (
+                                      <Check
+                                        strokeWidth={1.75}
+                                        className="size-3.5 text-emerald-600"
+                                      />
+                                    ) : (
+                                      <Copy
+                                        strokeWidth={1.75}
+                                        className="size-3.5"
+                                      />
+                                    )}
+                                  </button>
+                                </div>
+                                {method.config.wallets?.length ? (
+                                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                                    {method.config.wallets.map((w) => {
+                                      const key = w.toLowerCase();
+                                      const logo = WALLET_LOGOS[key];
+                                      return logo ? (
+                                        <span
+                                          key={w}
+                                          className="inline-flex items-center rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-[var(--border)]"
+                                        >
+                                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                                          <img
+                                            src={logo}
+                                            alt={w}
+                                            className="h-6 w-auto object-contain"
+                                          />
+                                        </span>
+                                      ) : (
+                                        <span
+                                          key={w}
+                                          className="rounded-lg bg-white px-2.5 py-1 text-[11px] font-semibold capitalize text-[var(--foreground)] ring-1 ring-[var(--border)]"
+                                        >
+                                          {w}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                ) : null}
+                              </div>
                             ) : null}
+                            <div>
+                              <label className="mb-1.5 block text-xs font-medium text-[var(--muted-foreground)]">
+                                Transaction ID *
+                              </label>
+                              <input
+                                type="text"
+                                name="transaction_id"
+                                autoComplete="off"
+                                placeholder="e.g. TXN123456789"
+                                value={transactionId}
+                                required={paymentMethod === "manual"}
+                                onChange={(e) => {
+                                  setTransactionId(e.target.value);
+                                  if (txnIdError) setTxnIdError(null);
+                                }}
+                                className="w-full rounded-lg border border-[var(--border)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--brand)]"
+                              />
+                              {txnIdError ? (
+                                <p className="mt-1.5 text-xs text-rose-600">{txnIdError}</p>
+                              ) : null}
+                            </div>
                           </div>
                         ) : null}
                       </label>
@@ -480,7 +529,7 @@ export function CheckoutPageClient({
             <button
               type="submit"
               disabled={placing || !paymentMethod}
-              className="mt-5 w-full rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-5 w-full rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-semibold text-[var(--brand-fg)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {placing ? "Placing order…" : "Place order"}
             </button>
@@ -488,6 +537,187 @@ export function CheckoutPageClient({
         </form>
       </div>
       <Footer />
+
+      {/* Marketplace success modal — card receipt (not Aurora's fashion ticket). */}
+      <AnimatePresence>
+        {order ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-900/55 backdrop-blur-[2px] print:hidden"
+              onClick={handleCloseReceipt}
+            />
+
+            <style>{`
+@media print {
+  body * { visibility: hidden; }
+  #bazaar-receipt, #bazaar-receipt * { visibility: visible; }
+  #bazaar-receipt {
+    position: absolute; left: 0; top: 0; margin: 0;
+    padding: 2rem; width: 100%; max-width: none;
+    box-shadow: none; border-radius: 0; background: white;
+  }
+  .print-hidden { display: none !important; }
+}
+`}</style>
+
+            <motion.div
+              id="bazaar-receipt"
+              role="dialog"
+              aria-labelledby="order-success-title"
+              aria-modal="true"
+              initial={{ opacity: 0, scale: 0.96, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 10 }}
+              transition={{ type: "spring", damping: 24, stiffness: 280 }}
+              className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl bg-white text-[var(--foreground)] shadow-2xl ring-1 ring-black/5"
+              style={{ padding: "2rem" }}
+            >
+              <div className="mb-6 text-center">
+                {logoUrl ? (
+                  <div className="relative mx-auto mb-3 h-8 w-28">
+                    <Image
+                      src={logoUrl}
+                      alt={siteName}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <h3
+                    id="order-success-title"
+                    className="mb-1 font-display text-2xl font-bold tracking-tight"
+                  >
+                    {siteName}
+                  </h3>
+                )}
+                <p
+                  id={logoUrl ? "order-success-title" : undefined}
+                  className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]"
+                >
+                  Order confirmed
+                </p>
+              </div>
+
+              <div className="mb-5 space-y-2 text-xs font-medium">
+                {(
+                  [
+                    [
+                      "Date",
+                      new Date(order.created_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                    ],
+                    ["Order", `#${order.order_number.replace(/^#/, "")}`],
+                    ["Payment", paymentLabel],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="flex items-baseline gap-2 text-[var(--muted-foreground)]"
+                  >
+                    <span className="shrink-0">{label}</span>
+                    <span
+                      aria-hidden
+                      className="min-w-4 flex-1 border-b border-dashed border-[var(--border)]"
+                    />
+                    <span className="shrink-0 font-medium text-[var(--foreground)]">
+                      {value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mb-6 space-y-3 border-y border-dashed border-[var(--border)] py-5">
+                {order.items.map((line, idx) => {
+                  const cartMatch = items.find(
+                    (c) => c.product.name === line.name,
+                  );
+                  const image = cartMatch?.product.images?.[0];
+                  return (
+                    <div
+                      key={`${line.name}-${idx}`}
+                      className="flex items-center gap-3"
+                    >
+                      <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-[var(--muted)]">
+                        {image ? (
+                          <Image
+                            src={image}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="44px"
+                          />
+                        ) : (
+                          <span className="flex size-full items-center justify-center text-[var(--muted-foreground)]">
+                            <Package className="size-4" strokeWidth={1.5} />
+                          </span>
+                        )}
+                      </div>
+                      <span className="min-w-0 flex-1 truncate text-sm text-[var(--foreground)]">
+                        {line.quantity}× {line.name}
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">
+                        {formatTaka(line.total_cents / 100)}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div className="flex items-baseline gap-2 pt-1 text-sm text-[var(--muted-foreground)]">
+                  <span className="shrink-0">Shipping</span>
+                  <span
+                    aria-hidden
+                    className="min-w-4 flex-1 border-b border-dashed border-[var(--border)]"
+                  />
+                  <span className="shrink-0 tabular-nums font-medium text-[var(--foreground)]">
+                    {order.shipping_cents > 0
+                      ? formatTaka(order.shipping_cents / 100)
+                      : "Free"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mb-6 flex items-end justify-between gap-3">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                  Total
+                </span>
+                <span className="text-2xl font-extrabold tabular-nums tracking-tight text-[var(--brand)]">
+                  {formatTaka(order.total_cents / 100)}
+                </span>
+              </div>
+
+              <div className="print-hidden space-y-2.5 text-center">
+                <p className="mb-3 text-xs leading-relaxed text-[var(--muted-foreground)]">
+                  Thank you{form.firstName ? `, ${form.firstName}` : ""}.
+                  {form.city
+                    ? ` Your order will ship to ${form.city} shortly.`
+                    : " We\u2019ll confirm by phone shortly."}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="w-full rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-bold text-[var(--brand-fg)] transition-opacity hover:opacity-90"
+                >
+                  Print receipt
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCloseReceipt}
+                  className="w-full rounded-[var(--theme-btn-radius)] border border-[var(--border)] py-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }

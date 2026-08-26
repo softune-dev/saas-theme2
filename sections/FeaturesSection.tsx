@@ -48,7 +48,7 @@ export function FeaturesSection() {
         {items.map((item, i) => (
           <div
             key={`${item.title ?? ""}-${i}`}
-            className="flex flex-col items-start gap-2 p-1 sm:flex-row sm:items-center sm:gap-3"
+            className="flex flex-row items-center justify-start gap-3 p-1"
           >
             {item.image ? (
               <span className="relative size-8 shrink-0 overflow-hidden sm:size-9">
@@ -61,9 +61,9 @@ export function FeaturesSection() {
                 strokeWidth={1.5}
               />
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 text-left">
               {item.title ? (
-                <p className="text-sm font-semibold text-[var(--foreground)]">
+                <p className="text-left text-sm font-semibold text-[var(--foreground)]">
                   {item.title}
                 </p>
               ) : null}

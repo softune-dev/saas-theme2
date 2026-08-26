@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Menu,
   Search,
-  ShoppingCart,
   User,
   X,
 } from "lucide-react";
@@ -199,19 +198,31 @@ export function Header({
           <button
             type="button"
             onClick={openDrawer}
-            // Mobile: icon-only circle; sm+: pill with total (unchanged)
-            className="relative inline-flex size-10 items-center justify-center rounded-full bg-[var(--brand)] text-white sm:size-auto sm:gap-2 sm:rounded-[var(--theme-btn-radius)] sm:px-3 sm:py-2"
+            className="relative inline-flex h-11 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-3 text-[var(--brand-fg)] sm:h-12 sm:gap-2.5 sm:px-3.5"
             aria-label={`Cart, ${itemCount} items`}
           >
-            <span className="relative">
-              <ShoppingCart className="size-4" />
+            <span className="relative inline-flex shrink-0">
+              <span
+                aria-hidden
+                className="block size-6 bg-[var(--brand-fg)] sm:size-7"
+                style={{
+                  WebkitMaskImage: "url(/assets/cart.svg)",
+                  maskImage: "url(/assets/cart.svg)",
+                  WebkitMaskSize: "contain",
+                  maskSize: "contain",
+                  WebkitMaskRepeat: "no-repeat",
+                  maskRepeat: "no-repeat",
+                  WebkitMaskPosition: "center",
+                  maskPosition: "center",
+                }}
+              />
               {itemCount > 0 ? (
-                <span className="absolute -right-2 -top-2 flex size-4 items-center justify-center rounded-full bg-white text-[9px] font-bold text-[var(--brand)]">
+                <span className="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-white text-[10px] font-bold leading-none text-[var(--brand)]">
                   {itemCount > 9 ? "9+" : itemCount}
                 </span>
               ) : null}
             </span>
-            <span className="hidden text-xs font-semibold tabular-nums sm:inline">
+            <span className="hidden text-sm font-bold tabular-nums tracking-tight sm:inline">
               {formatTaka(subtotal)}
             </span>
           </button>

@@ -52,7 +52,7 @@ export function CategoriesSection({
             href={`/shop?category=${cat.slug}`}
             className={[
               "group flex shrink-0 flex-col transition-transform duration-300 ease-out hover:-translate-y-1.5",
-              "w-[4.75rem] items-center sm:h-44 sm:w-36 sm:items-stretch",
+              "w-[5.5rem] items-center sm:h-44 sm:w-36 sm:items-stretch",
             ].join(" ")}
           >
             {/* Mobile: circle only (label below). sm+: full card chrome. */}
@@ -90,8 +90,8 @@ export function CategoriesSection({
                 {cat.name}
               </p>
             </div>
-            {/* Name outside circle — small screens only */}
-            <p className="mt-1.5 w-full truncate text-center text-[11px] font-semibold tracking-tight text-[var(--foreground)] sm:hidden">
+            {/* Name outside circle — small screens only; wrap, never truncate */}
+            <p className="mt-1.5 w-full text-center text-xs font-semibold leading-snug tracking-tight text-[var(--foreground)] break-words sm:hidden">
               {cat.name}
             </p>
           </Link>

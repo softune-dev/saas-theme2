@@ -56,17 +56,20 @@ export function HeroSection({
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-3 sm:px-4 sm:py-4">
-      <div className="flex items-stretch overflow-hidden rounded-xl border border-[var(--border)] bg-white">
-        {/* Rail stretches to banner height; View all sits at the bottom */}
-        <aside className="hidden w-52 shrink-0 flex-col border-r border-[var(--border)] lg:flex xl:w-56">
-          <ul className="min-h-0 flex-1 overflow-y-auto">
+      {/* Image column owns height (marquee + 16:9). Category rail is absolute
+       * so it cannot stretch the card — it only fills that fixed height. */}
+      <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-white">
+        <aside className="absolute inset-y-0 left-0 z-10 hidden w-52 flex-col border-r border-[var(--border)] bg-white lg:flex xl:w-56">
+          <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
             {categories.map((cat) => (
-              <li key={cat.id} className="border-b border-[var(--border)]">
+              <li
+                key={cat.id}
+                className="flex min-h-11 flex-1 border-b border-[var(--border)] last:border-b-0"
+              >
                 <Link
                   href={`/shop?category=${cat.slug}`}
-                  className="group/cat flex w-full items-center px-3.5 py-3.5 text-sm font-medium text-[var(--foreground)] transition-colors duration-200 hover:bg-[var(--muted)] hover:text-[var(--brand)]"
+                  className="group/cat flex h-full w-full items-center px-3.5 text-sm font-medium text-[var(--foreground)] transition-colors duration-200 hover:bg-[var(--muted)] hover:text-[var(--brand)]"
                 >
-                  {/* Slide content only — bg stays edge-to-edge (no left gap) */}
                   <span className="flex min-w-0 flex-1 items-center gap-2.5 transition-transform duration-200 group-hover/cat:translate-x-1">
                     <FeatureIcon
                       name={cat.icon || "package"}
@@ -82,25 +85,25 @@ export function HeroSection({
               </li>
             ))}
           </ul>
-          <div className="mt-auto flex shrink-0 items-center justify-center px-3.5 py-3">
+          <div className="mt-auto flex shrink-0 items-center justify-center border-t border-[var(--border)] px-3.5 py-3">
             <Link
               href="/categories"
-              className="inline-flex items-center gap-0.5 text-sm font-semibold tracking-tighter text-[var(--brand)] transition-opacity hover:opacity-80"
+              className="inline-flex items-center gap-1 text-sm font-semibold tracking-normal text-[var(--brand)] transition-opacity hover:opacity-80"
             >
               View all categories
-              <ChevronRight className="size-4" strokeWidth={2.25} />
+              <ChevronRight className="size-4" strokeWidth={2} />
             </Link>
           </div>
         </aside>
 
-        {/* Banner column: thin marquee strip full image-width, then slides */}
-        <div className="relative flex min-w-0 flex-1 flex-col bg-white">
+        <div className="relative flex min-w-0 flex-col bg-white lg:pl-52 xl:pl-56">
           {showMarquee ? (
             <HeroMarquee items={announcementItems} divider={divider} />
           ) : null}
 
-          <div className="relative min-h-0 flex-1">
-            <div className="relative aspect-square sm:hidden">
+          <div className="relative w-full overflow-hidden leading-none">
+            {/* Mobile: keep existing 1:1 cover crop */}
+            <div className="relative aspect-square overflow-hidden sm:hidden">
               {mobileSlides.map((src, i) => (
                 <Image
                   key={`m-${src}-${i}`}
@@ -110,7 +113,7 @@ export function HeroSection({
                   priority={i === 0}
                   sizes="100vw"
                   className={[
-                    "object-cover transition-opacity duration-700 ease-out",
+                    "object-cover object-center transition-opacity duration-700 ease-out",
                     i === mobileIndex ? "opacity-100" : "opacity-0",
                   ].join(" ")}
                 />
@@ -120,7 +123,9 @@ export function HeroSection({
               ) : null}
             </div>
 
-            <div className="relative hidden aspect-video sm:block">
+            {/* Desktop: fixed 16:9 height; image fits (no edge crop), top-aligned
+             * so it touches the banner; dots sit inside the bottom. */}
+            <div className="relative hidden aspect-video overflow-hidden bg-white sm:block">
               {desktopSlides.map((src, i) => (
                 <Image
                   key={`d-${src}-${i}`}
@@ -128,9 +133,9 @@ export function HeroSection({
                   alt=""
                   fill
                   priority={i === 0}
-                  sizes="(max-width: 1280px) 70vw, 960px"
+                  sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 70vw, 1024px"
                   className={[
-                    "object-cover transition-opacity duration-700 ease-out",
+                    "object-contain object-top transition-opacity duration-700 ease-out",
                     i === desktopIndex ? "opacity-100" : "opacity-0",
                   ].join(" ")}
                 />
@@ -149,7 +154,7 @@ export function HeroSection({
 /**
  * Compact right→left ticker across the full hero image width.
  * Two equal halves + translateX(-50%) = seamless loop (no jump).
- * Subtle chrome — muted bar, not brand fill.
+ * Brand fill from theme (--brand); text uses --brand-fg (white/black).
  */
 function HeroMarquee({
   items,
@@ -167,14 +172,14 @@ function HeroMarquee({
   }, [items]);
 
   const half = (
-    <div className="flex shrink-0 items-center gap-8 px-4 whitespace-nowrap sm:gap-10 sm:px-5">
+    <div className="flex shrink-0 items-center gap-6 px-4 whitespace-nowrap">
       {sequence.map((segment, j) => (
         <Fragment key={j}>
-          <span className="text-[11px] font-medium tracking-wide text-[var(--foreground)] sm:text-xs">
+          <span className="text-[11px] font-medium tracking-wide text-[var(--brand-fg)] sm:text-xs">
             {segment}
           </span>
           <span
-            className="text-[10px] text-[var(--muted-foreground)]"
+            className="text-[10px] text-[var(--brand-fg)] opacity-55"
             aria-hidden
           >
             {divider}
@@ -185,16 +190,19 @@ function HeroMarquee({
   );
 
   return (
-    <div className="relative z-10 shrink-0 overflow-hidden border-b border-[var(--border)] bg-[var(--muted)] py-1.5 select-none sm:py-2">
+    <div className="relative z-10 shrink-0 overflow-hidden bg-[var(--brand)] py-1.5 leading-none select-none sm:py-2">
       <div className="animate-marquee-rtl">
         {half}
-        <div className="flex shrink-0 items-center gap-8 px-4 whitespace-nowrap sm:gap-10 sm:px-5" aria-hidden>
+        <div
+          className="flex shrink-0 items-center gap-6 px-4 whitespace-nowrap"
+          aria-hidden
+        >
           {sequence.map((segment, j) => (
             <Fragment key={`dup-${j}`}>
-              <span className="text-[11px] font-medium tracking-wide text-[var(--foreground)] sm:text-xs">
+              <span className="text-[11px] font-medium tracking-wide text-[var(--brand-fg)] sm:text-xs">
                 {segment}
               </span>
-              <span className="text-[10px] text-[var(--muted-foreground)]">
+              <span className="text-[10px] text-[var(--brand-fg)] opacity-55">
                 {divider}
               </span>
             </Fragment>

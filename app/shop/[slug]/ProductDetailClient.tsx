@@ -14,6 +14,7 @@ import {
   Package,
   Plus,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
   Truck,
@@ -25,7 +26,6 @@ import { ProductReviews } from "@/components/product/ProductReviews";
 import { useCart } from "@/components/cart/CartContext";
 import { Footer } from "@/components/footer/Footer";
 
-// Stable icon cycle — same order every render (no Math.random).
 const FEATURE_ICONS = [
   Package,
   ShieldCheck,
@@ -38,9 +38,7 @@ const FEATURE_ICONS = [
 ];
 
 /**
- * Aurora-parity product detail for Bazaar: gallery, price/compare, sizes,
- * qty, add/buy/WhatsApp, rich description, feature highlights, reviews,
- * related products. Marketplace chrome via CSS variables.
+ * Marketplace PDP: gallery + buy panel, features, details, related.
  */
 export function ProductDetailClient({
   initialProduct,
@@ -49,24 +47,20 @@ export function ProductDetailClient({
 }: {
   initialProduct: Product;
   relatedProducts: Product[];
-  /** Resolved from real categories list on the server — not sample-data. */
   categorySlug?: string;
 }) {
   const product = initialProduct;
   const { addItem, openDrawer } = useCart();
   const router = useRouter();
 
-  // Next's scroll-to-top-on-navigate can land mid-page instead of the top
-  // when this route streams in behind loading.tsx — force it explicitly
-  // rather than depend on that timing. Re-fires per product so clicking a
-  // related product (same route pattern, new slug) also resets scroll.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [product.id]);
 
   const [activeImage, setActiveImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState(
-    product.sizes?.[0] || "",
+  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(
+    product.colors?.[0]?.name,
   );
   const [quantity, setQuantity] = useState(1);
 
@@ -80,14 +74,17 @@ export function ProductDetailClient({
   const related = relatedProducts
     .filter((p) => p.id !== product.id)
     .slice(0, 4);
+  const showRating = product.reviewCount > 0;
 
   const handleAddToCart = () => {
-    addItem(product, quantity, selectedSize || undefined);
+    addItem(product, quantity, selectedSize || undefined, selectedColor);
     openDrawer();
   };
 
   const handleBuyNow = () => {
-    addItem(product, quantity, selectedSize || undefined);
+    addItem(product, quantity, selectedSize || undefined, selectedColor, {
+      openDrawer: false,
+    });
     router.push("/checkout");
   };
 
@@ -95,7 +92,8 @@ export function ProductDetailClient({
     const phoneNumber = "8801700000000";
     const url = typeof window !== "undefined" ? window.location.href : "";
     const sizeLine = selectedSize ? `\nSize: ${selectedSize}` : "";
-    const message = `Hello, I'd like to order: *${product.name}*${sizeLine}\nQuantity: ${quantity}\nLink: ${url}`;
+    const colorLine = selectedColor ? `\nColor: ${selectedColor}` : "";
+    const message = `Hello, I'd like to order: *${product.name}*${sizeLine}${colorLine}\nQuantity: ${quantity}\nLink: ${url}`;
     window.open(
       `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`,
       "_blank",
@@ -104,38 +102,37 @@ export function ProductDetailClient({
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--foreground)]">
-      {/* Breadcrumbs */}
-      <div className="mx-auto w-full max-w-[1280px] px-4 pt-8 sm:px-6 md:px-8">
-        <nav className="text-xs text-[var(--muted-foreground)]">
+      <div className="mx-auto w-full max-w-[1280px] px-3 pt-5 sm:px-4 sm:pt-6">
+        <nav className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-[var(--muted-foreground)]">
           <Link href="/" className="hover:text-[var(--brand)]">
             Home
           </Link>
-          <span className="mx-1.5">/</span>
+          <span>/</span>
           <Link href="/shop" className="hover:text-[var(--brand)]">
             Shop
           </Link>
-          <span className="mx-1.5">/</span>
+          <span>/</span>
           <Link
-            href={
-              categorySlug ? `/shop?category=${categorySlug}` : "/shop"
-            }
+            href={categorySlug ? `/shop?category=${categorySlug}` : "/shop"}
             className="hover:text-[var(--brand)]"
           >
             {product.categoryName}
           </Link>
-          <span className="mx-1.5">/</span>
-          <span className="text-[var(--foreground)]">{product.name}</span>
+          <span>/</span>
+          <span className="line-clamp-1 font-medium text-[var(--foreground)]">
+            {product.name}
+          </span>
         </nav>
       </div>
 
-      {/* Main: gallery + buy panel */}
-      <section className="mx-auto mt-6 grid w-full max-w-[1280px] flex-1 gap-8 px-4 sm:px-6 md:mt-8 md:grid-cols-2 md:gap-12 md:px-8">
+      <section className="mx-auto mt-5 grid w-full max-w-[1280px] flex-1 gap-6 px-3 sm:px-4 md:mt-7 md:grid-cols-2 md:gap-10 lg:gap-12">
+        {/* Gallery */}
         <div className="space-y-3">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.45 }}
-            className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--muted)]"
+            transition={{ duration: 0.4 }}
+            className="relative aspect-square overflow-hidden rounded-2xl bg-white"
           >
             {product.images[activeImage] || product.images[0] ? (
               <Image
@@ -148,24 +145,24 @@ export function ProductDetailClient({
               />
             ) : null}
             {discount > 0 ? (
-              <span className="absolute top-3 left-3 rounded-md bg-[var(--brand)] px-2 py-1 text-xs font-bold text-white">
+              <span className="absolute left-3 top-3 rounded-md bg-[var(--brand)] px-2.5 py-1 text-xs font-bold text-[var(--brand-fg)] shadow-sm">
                 -{discount}%
               </span>
             ) : null}
           </motion.div>
 
           {product.images.length > 1 ? (
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex gap-2 overflow-x-auto pb-0.5">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setActiveImage(idx)}
                   className={[
-                    "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 bg-[var(--muted)] sm:size-20",
+                    "relative size-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white sm:size-[4.5rem]",
                     activeImage === idx
-                      ? "border-[var(--brand)] opacity-100"
-                      : "border-transparent opacity-70 hover:opacity-100",
+                      ? "border-[var(--brand)]"
+                      : "border-[var(--border)] opacity-80 hover:opacity-100",
                   ].join(" ")}
                 >
                   <Image
@@ -181,85 +178,128 @@ export function ProductDetailClient({
           ) : null}
         </div>
 
+        {/* Buy panel */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.08 }}
-          className="space-y-6 md:sticky md:top-24 md:self-start"
+          transition={{ duration: 0.4, delay: 0.06 }}
+          className="space-y-5 md:sticky md:top-24 md:self-start"
         >
-          <div>
+          <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold tracking-wider text-[var(--muted-foreground)] uppercase">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
                 {product.categoryName}
               </p>
               {product.inStock ? (
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
                   In stock
-                  {product.stockCount > 0
-                    ? ` · ${product.stockCount} left`
-                    : ""}
+                  {product.stockCount > 0 ? ` · ${product.stockCount}` : ""}
                 </span>
               ) : (
-                <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-600">
+                <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-600 ring-1 ring-rose-100">
                   Out of stock
                 </span>
               )}
+              {product.badge ? (
+                <span className="rounded-full bg-[var(--brand)]/10 px-2 py-0.5 text-[11px] font-semibold text-[var(--brand)]">
+                  {product.badge}
+                </span>
+              ) : null}
             </div>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
+
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
               {product.name}
             </h1>
 
-            <div className="mt-3 flex items-center gap-2">
-              <span className="inline-flex items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={[
-                      "size-3.5",
-                      i < Math.round(product.rating)
-                        ? "fill-amber-400 text-amber-400"
-                        : "fill-transparent text-[var(--border)]",
-                    ].join(" ")}
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </span>
-              <span className="text-sm font-medium text-[var(--foreground)]">
-                {product.rating.toFixed(1)}
-              </span>
-              <span className="text-sm text-[var(--muted-foreground)]">
-                ({product.reviewCount.toLocaleString()} reviews)
-              </span>
-            </div>
+            {showRating ? (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={[
+                        "size-3.5",
+                        i < Math.round(product.rating)
+                          ? "fill-amber-400 text-amber-400"
+                          : "fill-transparent text-[var(--border)]",
+                      ].join(" ")}
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </span>
+                <span className="text-sm font-medium text-[var(--foreground)]">
+                  {product.rating.toFixed(1)}
+                </span>
+                <span className="text-sm text-[var(--muted-foreground)]">
+                  ({product.reviewCount.toLocaleString()} reviews)
+                </span>
+              </div>
+            ) : null}
 
-            <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              <span className="text-3xl font-extrabold tabular-nums tracking-tight text-[var(--brand)] sm:text-4xl">
+            <div className="flex flex-wrap items-baseline gap-2.5">
+              <span className="text-3xl font-extrabold tabular-nums tracking-tight text-[var(--foreground)]">
                 {formatTaka(product.price)}
               </span>
               {hasCompare ? (
-                <span className="text-lg tabular-nums text-[var(--muted-foreground)] line-through">
+                <span className="text-base tabular-nums text-[var(--muted-foreground)] line-through">
                   {formatTaka(product.originalPrice!)}
                 </span>
               ) : null}
               {discount > 0 ? (
                 <span className="rounded-md bg-[var(--brand)]/10 px-2 py-0.5 text-sm font-bold text-[var(--brand)]">
-                  -{discount}%
+                  Save {discount}%
                 </span>
               ) : null}
             </div>
+
+            {product.tagline ? (
+              <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">
+                {product.tagline}
+              </p>
+            ) : null}
           </div>
 
-          {product.tagline ? (
-            <p className="max-w-md text-sm leading-relaxed text-[var(--muted-foreground)]">
-              {product.tagline}
-            </p>
+          {product.colors && product.colors.length > 0 ? (
+            <div>
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                <span>{product.colorLabel || "Color"}</span>
+                {selectedColor ? (
+                  <span className="normal-case tracking-normal text-[var(--foreground)]">
+                    {selectedColor}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-2.5 flex flex-wrap gap-2.5">
+                {product.colors.map((c) => (
+                  <button
+                    key={c.name}
+                    type="button"
+                    onClick={() => setSelectedColor(c.name)}
+                    aria-label={c.name}
+                    title={c.name}
+                    className={[
+                      "size-9 shrink-0 rounded-full border transition-all",
+                      selectedColor === c.name
+                        ? "ring-2 ring-[var(--brand)] ring-offset-2"
+                        : "border-[var(--border)] hover:ring-2 hover:ring-[var(--border)] hover:ring-offset-2",
+                    ].join(" ")}
+                    style={{ backgroundColor: c.hex }}
+                  />
+                ))}
+              </div>
+            </div>
           ) : null}
 
           {availableSizes.length > 0 ? (
             <div>
-              <div className="flex items-center justify-between text-xs font-semibold tracking-wide text-[var(--muted-foreground)] uppercase">
-                <span>Size</span>
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+                {product.sizeLabel || "Size"}
+                {selectedSize ? (
+                  <span className="ml-2 normal-case tracking-normal text-[var(--foreground)]">
+                    {selectedSize}
+                  </span>
+                ) : null}
+              </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {availableSizes.map((s) => (
                   <button
@@ -267,9 +307,9 @@ export function ProductDetailClient({
                     type="button"
                     onClick={() => setSelectedSize(s)}
                     className={[
-                      "min-w-11 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors",
+                      "min-w-11 rounded-[var(--theme-btn-radius)] border px-3 py-2.5 text-sm font-semibold transition-colors",
                       selectedSize === s
-                        ? "border-[var(--brand)] bg-[var(--brand)] text-white"
+                        ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]"
                         : "border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[var(--brand)]",
                     ].join(" ")}
                   >
@@ -280,24 +320,24 @@ export function ProductDetailClient({
             </div>
           ) : null}
 
-          <div className="space-y-3 pt-1">
-            <div className="flex items-center gap-3">
-              <div className="inline-flex items-center overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white">
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center gap-2.5">
+              <div className="inline-flex items-center overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--background)]">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="p-3.5 text-[var(--foreground)] hover:bg-[var(--muted)]"
+                  className="p-3 text-[var(--foreground)] transition-colors hover:bg-white"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="size-3.5" strokeWidth={2} />
                 </button>
-                <span className="w-9 text-center text-sm font-semibold tabular-nums">
+                <span className="w-9 text-center text-sm font-bold tabular-nums">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
-                  className="p-3.5 text-[var(--foreground)] hover:bg-[var(--muted)]"
+                  className="p-3 text-[var(--foreground)] transition-colors hover:bg-white"
                   aria-label="Increase quantity"
                 >
                   <Plus className="size-3.5" strokeWidth={2} />
@@ -307,38 +347,40 @@ export function ProductDetailClient({
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--foreground)] py-3.5 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--brand)] hover:bg-[var(--brand)] hover:text-white"
+                disabled={!product.inStock}
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--background)] px-3 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
               >
+                <ShoppingBag className="size-4" strokeWidth={2} />
                 Add to cart
               </button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
-              >
-                Buy now
-              </button>
-              <button
-                type="button"
-                onClick={handleWhatsAppBuy}
-                className="flex items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white py-3.5 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--brand)]"
-              >
-                <Image
-                  src="/assets/whatsapp.svg"
-                  alt=""
-                  width={18}
-                  height={18}
-                />
-                Order via WhatsApp
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              disabled={!product.inStock}
+              className="flex min-h-11 w-full items-center justify-center rounded-[var(--theme-btn-radius)] bg-[var(--brand)] text-sm font-bold text-[var(--brand-fg)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Buy now
+            </button>
+
+            <button
+              type="button"
+              onClick={handleWhatsAppBuy}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white text-sm font-semibold text-[var(--foreground)] transition-colors hover:border-[#25D366]/50 hover:bg-[#25D366]/5"
+            >
+              <Image
+                src="/assets/whatsapp.svg"
+                alt=""
+                width={18}
+                height={18}
+              />
+              Order via WhatsApp
+            </button>
           </div>
 
           {!product.freeDelivery && product.deliveryCharges.length > 0 ? (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/60 p-3.5">
+            <div className="rounded-xl bg-[var(--muted)]/50 p-3.5">
               <p className="text-xs font-semibold text-[var(--foreground)]">
                 Delivery charges
               </p>
@@ -349,7 +391,7 @@ export function ProductDetailClient({
                     className="flex items-center justify-between gap-3"
                   >
                     <span>{dc.name}</span>
-                    <span className="font-semibold tabular-nums text-[var(--foreground)]">
+                    <span className="font-bold tabular-nums text-[var(--foreground)]">
                       {formatTaka(dc.charge)}
                     </span>
                   </li>
@@ -365,11 +407,12 @@ export function ProductDetailClient({
         </motion.div>
       </section>
 
-      {/* Feature highlights first, then rich Product details (Aurora order) */}
-      {(product.description || product.longDescription || features.length > 0) && (
-        <section className="mx-auto w-full max-w-[1280px] space-y-12 px-4 py-12 sm:px-6 md:space-y-14 md:px-8 md:py-16">
+      {(product.description ||
+        product.longDescription ||
+        features.length > 0) && (
+        <section className="mx-auto w-full max-w-[1280px] space-y-10 px-3 py-10 sm:px-4 md:space-y-12 md:py-14">
           {features.length > 0 ? (
-            <div className="grid gap-8 text-left md:grid-cols-3 md:gap-10">
+            <div className="grid gap-8 text-left sm:grid-cols-3 sm:gap-10">
               {features.map((feature, i) => {
                 const Icon = FEATURE_ICONS[i % FEATURE_ICONS.length] ?? Star;
                 return (
@@ -394,16 +437,16 @@ export function ProductDetailClient({
 
           {product.description || product.longDescription ? (
             <div className="space-y-4 text-left">
-              <h3 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
+              <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
                 Product details
               </h3>
               {product.description?.includes("<") ? (
                 <div
-                  className="prose prose-sm max-w-3xl text-[var(--muted-foreground)] [&_a]:text-[var(--brand)] [&_a]:underline [&_img]:my-4 [&_img]:rounded-lg [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
+                  className="prose prose-sm mt-4 max-w-3xl text-[var(--muted-foreground)] [&_a]:text-[var(--brand)] [&_a]:underline [&_img]:my-4 [&_img]:rounded-lg [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (
-                <p className="max-w-3xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+                <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
                   {product.longDescription || product.description}
                 </p>
               )}
@@ -412,17 +455,19 @@ export function ProductDetailClient({
         </section>
       )}
 
-      <ProductReviews
-        averageRating={product.rating}
-        totalReviews={product.reviewCount}
-      />
+      {showRating ? (
+        <ProductReviews
+          averageRating={product.rating}
+          totalReviews={product.reviewCount}
+        />
+      ) : null}
 
       {related.length > 0 ? (
-        <section className="mx-auto w-full max-w-[1280px] px-4 pt-4 pb-16 sm:px-6 md:px-8 md:pb-20">
-          <p className="text-xs font-semibold tracking-wider text-[var(--muted-foreground)] uppercase">
+        <section className="mx-auto w-full max-w-[1280px] px-3 pb-14 pt-2 sm:px-4 md:pb-16">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
             You may also like
           </p>
-          <h2 className="mt-1 mb-8 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
+          <h2 className="mt-1 mb-6 text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
             Related products
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">

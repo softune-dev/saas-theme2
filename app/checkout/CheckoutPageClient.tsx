@@ -3,13 +3,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, Package } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import { formatTaka } from "@/lib/utils";
 import { Footer } from "@/components/footer/Footer";
 import { submitOrder, type PublicOrderOut } from "@/lib/checkout";
+import { RecaptchaChallengeRequiredError, hasV2Fallback } from "@/lib/recaptcha";
+import { RecaptchaDisclosure } from "@/components/recaptcha-disclosure";
+import {
+  RecaptchaV2Fallback,
+  type RecaptchaV2FallbackHandle,
+} from "@/components/recaptcha-v2-fallback";
 import type { PublicPaymentMethod } from "@/lib/theme-types";
 
 // Only the local part after the fixed "+880" prefix — 10 digits, starting
@@ -76,6 +82,9 @@ export function CheckoutPageClient({
   const [order, setOrder] = useState<PublicOrderOut | null>(null);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsChallenge, setNeedsChallenge] = useState(false);
+  const [v2Token, setV2Token] = useState<string | null>(null);
+  const v2Ref = useRef<RecaptchaV2FallbackHandle>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -116,10 +125,16 @@ export function CheckoutPageClient({
         delivery_location: selectedDeliveryLocation,
         payment_method: paymentMethod,
         transaction_id: paymentMethod === "manual" ? transactionId.trim() : undefined,
-      });
+      }, v2Token ?? "");
       setOrder(placed);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't place your order. Please try again.");
+      if (err instanceof RecaptchaChallengeRequiredError) {
+        setNeedsChallenge(true);
+        setError(hasV2Fallback ? null : err.message);
+      } else {
+        setError(err instanceof Error ? err.message : "Couldn't place your order. Please try again.");
+        v2Ref.current?.reset();
+      }
     } finally {
       setPlacing(false);
     }
@@ -526,13 +541,22 @@ export function CheckoutPageClient({
 
             {error ? <p className="mt-3 text-xs text-rose-600">{error}</p> : null}
 
+            {needsChallenge && hasV2Fallback ? (
+              <div className="mt-3">
+                <RecaptchaV2Fallback ref={v2Ref} onVerify={setV2Token} />
+              </div>
+            ) : null}
+
             <button
               type="submit"
-              disabled={placing || !paymentMethod}
+              disabled={placing || !paymentMethod || (needsChallenge && !v2Token)}
               className="mt-5 w-full rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-semibold text-[var(--brand-fg)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {placing ? "Placing order…" : "Place order"}
             </button>
+            <div className="mt-3">
+              <RecaptchaDisclosure />
+            </div>
           </aside>
         </form>
       </div>

@@ -116,3 +116,12 @@ h4,
 .animate-marquee-rtl:hover {
   animation-play-state: paused;
 }
+
+/* reCAPTCHA v3's floating badge is required by Google's terms UNLESS the
+   site instead shows the visible text disclosure — checkout and the
+   contact form both render that text next to their submit button (see
+   components/recaptcha-disclosure.tsx), so the badge is redundant chrome
+   sitting on top of the storefront on every page. See lib/recaptcha.ts. */
+.grecaptcha-badge {
+  visibility: hidden;
+}

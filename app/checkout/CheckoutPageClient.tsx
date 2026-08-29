@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, Package } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
@@ -11,6 +11,7 @@ import { formatTaka } from "@/lib/utils";
 import { Footer } from "@/components/footer/Footer";
 import { submitOrder, type PublicOrderOut } from "@/lib/checkout";
 import { RecaptchaChallengeRequiredError, hasV2Fallback } from "@/lib/recaptcha";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/tracking";
 import { RecaptchaDisclosure } from "@/components/recaptcha-disclosure";
 import {
   RecaptchaV2Fallback,
@@ -96,6 +97,18 @@ export function CheckoutPageClient({
 
   const total = subtotal + deliveryFee;
 
+  // Fires once per real checkout view — see aurora's CheckoutPageClient for
+  // the identical pattern this mirrors.
+  useEffect(() => {
+    if (items.length === 0) return;
+    trackInitiateCheckout(
+      items.map((i) => ({ id: i.product.id, name: i.product.name, price: i.product.price, quantity: i.quantity })),
+      total,
+      "BDT",
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount with a non-empty cart, not on every total/items identity change
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (items.length === 0 || placing || !paymentMethod) return;
@@ -127,6 +140,15 @@ export function CheckoutPageClient({
         transaction_id: paymentMethod === "manual" ? transactionId.trim() : undefined,
       }, v2Token ?? "");
       setOrder(placed);
+      // PublicOrderItemOut never carries product_id (deliberately minimal),
+      // so this uses the cart's own items for real ids instead of the order
+      // response, combined with the order's actual charged total/currency.
+      trackPurchase({
+        orderId: placed.order_number,
+        value: placed.total_cents / 100,
+        currency: placed.currency,
+        items: items.map((i) => ({ id: i.product.id, name: i.product.name, price: i.product.price, quantity: i.quantity })),
+      });
     } catch (err) {
       if (err instanceof RecaptchaChallengeRequiredError) {
         setNeedsChallenge(true);

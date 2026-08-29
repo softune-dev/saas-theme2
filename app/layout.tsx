@@ -27,6 +27,7 @@ import {
   Work_Sans,
 } from "next/font/google";
 import { Suspense } from "react";
+import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
 import { CartProvider } from "@/components/cart/CartContext";
@@ -34,6 +35,7 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { Header } from "@/components/header/Header";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { PreviewRouteBeacon } from "@/components/dev/PreviewRouteBeacon";
+import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
 import { fetchSiteConfig, getPageSeo, getSiteHost, resolveTheme } from "@/lib/get-site";
 import { getSiteCategories } from "@/lib/public-catalog";
 import { SiteUnavailable } from "@/components/ui/SiteUnavailable";
@@ -312,6 +314,7 @@ export default async function RootLayout({
   }
 
   const theme = resolveTheme(config);
+  const rawSeo = config.site.seo ?? {};
   // Header dropdown + mobile drawer need the same real categories as the
   // homepage rail — fetched once per request here, not from sample-data.
   const categories = await getSiteCategories(host);
@@ -319,8 +322,70 @@ export default async function RootLayout({
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col antialiased bg-[var(--background)] text-[var(--foreground)]">
+        {/* Merchant-provided tracking — only loaded when an id is actually
+         * set (Site Settings → SEO), so a site with none pays zero cost.
+         * Matches templates/aurora/app/layout.tsx exactly. */}
+        {rawSeo.google_analytics ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${rawSeo.google_analytics}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga-init" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${rawSeo.google_analytics}');`}
+            </Script>
+          </>
+        ) : null}
+        {rawSeo.facebook_pixel ? (
+          <Script id="fb-pixel-init" strategy="afterInteractive">
+            {`!function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '${rawSeo.facebook_pixel}');
+              fbq('track', 'PageView');`}
+          </Script>
+        ) : null}
+        {rawSeo.tiktok_pixel ? (
+          <Script id="tiktok-pixel-init" strategy="afterInteractive">
+            {`!function (w, d, t) {
+              w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=i+"?sdkid="+e+"&lib="+t;var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(a,s)};
+              ttq.load('${rawSeo.tiktok_pixel}');
+              ttq.page();
+            }(window, document, 'ttq');`}
+          </Script>
+        ) : null}
+        {rawSeo.gtm_container_id ? (
+          <>
+            <Script id="gtm-init" strategy="afterInteractive">
+              {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+                'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                })(window,document,'script','dataLayer','${rawSeo.gtm_container_id}');`}
+            </Script>
+            <noscript>
+              <iframe
+                src={`https://www.googletagmanager.com/ns.html?id=${rawSeo.gtm_container_id}`}
+                height="0"
+                width="0"
+                style={{ display: "none", visibility: "hidden" }}
+              />
+            </noscript>
+          </>
+        ) : null}
         <Suspense fallback={null}>
           <PreviewRouteBeacon />
+        </Suspense>
+        <Suspense fallback={null}>
+          <PageViewBeacon host={host} />
         </Suspense>
         <ThemeProvider initialSettings={theme}>
           <ToastProvider>

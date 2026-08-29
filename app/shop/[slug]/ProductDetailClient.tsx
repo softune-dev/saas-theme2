@@ -13,6 +13,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { useCart } from "@/components/cart/CartContext";
 import { Footer } from "@/components/footer/Footer";
+import { trackAddToCart, trackViewContent } from "@/lib/tracking";
 
 // Neutral fallback for a feature added before icon-picking existed (or left
 // unset) — never a guess derived from the title text.
@@ -36,7 +37,8 @@ export function ProductDetailClient({
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [product.id]);
+    trackViewContent({ id: product.id, name: product.name, price: product.price }, "BDT");
+  }, [product.id, product.name, product.price]);
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
@@ -63,6 +65,7 @@ export function ProductDetailClient({
 
   const handleAddToCart = () => {
     addItem(product, quantity, selectedSize || undefined, selectedColor);
+    trackAddToCart({ id: product.id, name: product.name, price: product.price, quantity }, "BDT");
     openDrawer();
   };
 
@@ -70,6 +73,7 @@ export function ProductDetailClient({
     addItem(product, quantity, selectedSize || undefined, selectedColor, {
       openDrawer: false,
     });
+    trackAddToCart({ id: product.id, name: product.name, price: product.price, quantity }, "BDT");
     router.push("/checkout");
   };
 

@@ -147,11 +147,21 @@ export function ProductShowcaseSection({
           {/* Product details & buy form */}
           <div className="flex flex-col justify-center gap-5 p-5 sm:gap-6 sm:p-8 lg:p-10">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
-                Featured Product
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+                  Featured Product
+                </p>
+                <Link
+                  href={`/shop/${product.slug}`}
+                  className="text-xs font-semibold text-[var(--brand)] hover:underline"
+                >
+                  View Details →
+                </Link>
+              </div>
               <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
-                {product.name}
+                <Link href={`/shop/${product.slug}`} className="hover:underline">
+                  {product.name}
+                </Link>
               </h2>
               {product.description ? (
                 <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)] line-clamp-3">
@@ -262,13 +272,6 @@ export function ProductShowcaseSection({
                 Buy Now
               </button>
             </div>
-
-            <Link
-              href={`/shop/${product.slug}`}
-              className="text-xs font-semibold text-[var(--muted-foreground)] underline hover:text-[var(--brand)]"
-            >
-              View full product details →
-            </Link>
           </div>
         </div>
       </div>

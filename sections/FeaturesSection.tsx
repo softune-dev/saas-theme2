@@ -32,39 +32,12 @@ export function FeaturesSection() {
     },
   ].filter((item) => item.title || item.body);
 
-  const items: Array<{
-    title?: string;
-    body?: string;
-    iconName?: string;
-    image?: string;
-  }> =
-    filtered.length > 0
-      ? filtered
-      : [
-          {
-            title: "Nationwide Delivery",
-            body: "Fast and reliable shipping to your doorstep across Bangladesh.",
-            iconName: "truck",
-            image: undefined,
-          },
-          {
-            title: "Secure Payment",
-            body: "Cash on delivery, bKash, Nagad, and secure card payment.",
-            iconName: "shield-check",
-            image: undefined,
-          },
-          {
-            title: "Guaranteed Quality",
-            body: "100% authentic curated products with easy customer support.",
-            iconName: "badge-check",
-            image: undefined,
-          },
-        ];
+  const isSkeleton = filtered.length === 0;
 
   const colClass =
-    items.length === 1
+    (isSkeleton ? 3 : filtered.length) === 1
       ? "grid-cols-1"
-      : items.length === 2
+      : (isSkeleton ? 3 : filtered.length) === 2
         ? "grid-cols-1 sm:grid-cols-2"
         : "grid-cols-1 sm:grid-cols-3";
 
@@ -72,36 +45,50 @@ export function FeaturesSection() {
     // Hidden on small screens — trust strip is desktop/tablet chrome only.
     <section className="mx-auto hidden max-w-[1280px] px-3 py-4 sm:block sm:px-4">
       <div className={`grid gap-3 sm:gap-4 ${colClass}`}>
-        {items.map((item, i) => (
-          <div
-            key={`${item.title ?? ""}-${i}`}
-            className="flex flex-row items-center justify-start gap-3 p-1"
-          >
-            {item.image ? (
-              <span className="relative size-8 shrink-0 overflow-hidden sm:size-9">
-                <Image src={item.image} alt="" fill className="object-contain" />
-              </span>
-            ) : (
-              <FeatureIcon
-                name={item.iconName ?? "grid-3x3"}
-                className="size-7 shrink-0 text-[var(--brand)] sm:size-8"
-                strokeWidth={1.5}
-              />
-            )}
-            <div className="min-w-0 text-left">
-              {item.title ? (
-                <p className="text-left text-sm font-semibold text-[var(--foreground)]">
-                  {item.title}
-                </p>
-              ) : null}
-              {item.body ? (
-                <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-[var(--muted-foreground)]">
-                  {item.body}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        ))}
+        {isSkeleton
+          ? [0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex flex-row items-center justify-center gap-3 p-1"
+                aria-hidden
+              >
+                <span className="size-7 shrink-0 rounded-full bg-neutral-300 sm:size-8" />
+                <div className="w-32 space-y-1.5">
+                  <div className="h-3.5 w-24 rounded bg-neutral-300" />
+                  <div className="h-3 w-32 rounded bg-neutral-300/70" />
+                </div>
+              </div>
+            ))
+          : filtered.map((item, i) => (
+              <div
+                key={`${item.title ?? ""}-${i}`}
+                className="flex flex-row items-center justify-start gap-3 p-1"
+              >
+                {item.image ? (
+                  <span className="relative size-8 shrink-0 overflow-hidden sm:size-9">
+                    <Image src={item.image} alt="" fill className="object-contain" />
+                  </span>
+                ) : (
+                  <FeatureIcon
+                    name={item.iconName ?? "grid-3x3"}
+                    className="size-7 shrink-0 text-[var(--brand)] sm:size-8"
+                    strokeWidth={1.5}
+                  />
+                )}
+                <div className="min-w-0 text-left">
+                  {item.title ? (
+                    <p className="text-left text-sm font-semibold text-[var(--foreground)]">
+                      {item.title}
+                    </p>
+                  ) : null}
+                  {item.body ? (
+                    <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-[var(--muted-foreground)]">
+                      {item.body}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ))}
       </div>
     </section>
   );

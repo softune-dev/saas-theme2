@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 import { FeatureIcon } from "@/lib/icon-map";
 import type { ProductCategory } from "@/lib/theme-types";
@@ -23,6 +23,11 @@ function useSlideIndex(count: number) {
   return safe;
 }
 
+// No real store policy is known yet at this point, so this is instructional
+// placeholder text, not a fabricated claim — same rule as every other empty
+// state in this theme.
+const DEFAULT_MARQUEE_ITEMS = ["Your announcement goes here"];
+
 /**
  * Marketplace hero: category rail + multi-image promo slider.
  * White card chrome; dots overlaid on the image; View all pinned to rail bottom.
@@ -36,66 +41,74 @@ export function HeroSection({
   const wide = (settings.heroImages ?? []).filter(Boolean);
   const square = (settings.heroImagesSquare ?? []).filter(Boolean);
   // Hero images are merchant-owned theme fields — empty means no slides,
-  // not a stock Unsplash fallback (same honesty rule as catalog data).
+  // rendering clean skeleton blocks with + icon and aspect ratio labels.
   const desktopSlides = wide.length > 0 ? wide : [];
   const mobileSlides = square.length > 0 ? square : desktopSlides;
 
   const desktopIndex = useSlideIndex(desktopSlides.length);
   const mobileIndex = useSlideIndex(mobileSlides.length);
 
-  const announcementItems = useMemo(
+  const customAnnouncementItems = useMemo(
     () =>
       (settings.announcementItems ?? [])
         .map((s) => s.trim())
         .filter(Boolean),
     [settings.announcementItems],
   );
+  const marqueeItems =
+    customAnnouncementItems.length > 0
+      ? customAnnouncementItems
+      : DEFAULT_MARQUEE_ITEMS;
   const divider = settings.announcementDivider?.trim() || "·";
-  // Only show when merchant has real items — no fabricated marquee copy.
-  const showMarquee = announcementItems.length > 0;
+
+  // Category rail layout: Max 9 categories total.
+  // When categories < 5, show real categories on top + fill remainder up to 9 with skeletons.
+  // When categories >= 5, show real categories only (no skeletons).
+  const displayCategories = categories.slice(0, 9);
+  const realCount = displayCategories.length;
+  const skeletonCount = realCount < 5 ? 9 - realCount : 0;
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-3 sm:px-4 sm:py-4">
       {/* Image column owns height (marquee + 16:9). Category rail is absolute
        * so it cannot stretch the card — it only fills that fixed height. */}
       <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-white">
-        <aside className="absolute inset-y-0 left-0 z-10 hidden w-52 flex-col border-r border-[var(--border)] bg-white lg:flex xl:w-56">
+        <aside className="absolute inset-y-0 left-0 z-10 hidden w-56 flex-col border-r border-[var(--border)] bg-white lg:flex xl:w-64">
           <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-            {categories.length > 0
-              ? categories.map((cat) => (
-                  <li
-                    key={cat.id}
-                    className="flex min-h-11 flex-1 border-b border-[var(--border)] last:border-b-0"
-                  >
-                    <Link
-                      href={`/shop?category=${cat.slug}`}
-                      className="group/cat flex h-full w-full items-center px-3.5 text-sm font-medium text-[var(--foreground)] transition-colors duration-200 hover:bg-[var(--muted)] hover:text-[var(--brand)]"
-                    >
-                      <span className="flex min-w-0 flex-1 items-center gap-2.5 transition-transform duration-200 group-hover/cat:translate-x-1">
-                        <FeatureIcon
-                          name={cat.icon || "package"}
-                          className="size-4 shrink-0 text-[var(--foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]"
-                          strokeWidth={1.75}
-                        />
-                        <span className="min-w-0 flex-1 truncate transition-colors duration-200 group-hover/cat:text-[var(--brand)]">
-                          {cat.name}
-                        </span>
-                        <ChevronRight className="size-4 shrink-0 text-[var(--muted-foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]" />
-                      </span>
-                    </Link>
-                  </li>
-                ))
-              : Array.from({ length: 6 }).map((_, i) => (
-                  <li
-                    key={i}
-                    className="flex min-h-11 flex-1 border-b border-[var(--border)] last:border-b-0 items-center px-3.5 gap-2.5"
-                  >
-                    <div className="size-4 rounded bg-[var(--muted)]" />
-                    <div className="h-3.5 w-24 bg-[var(--muted)] rounded" />
-                  </li>
-                ))}
+            {displayCategories.map((cat) => (
+              <li
+                key={cat.id}
+                className="flex h-[52px] shrink-0 border-b border-[var(--border)] last:border-b-0"
+              >
+                <Link
+                  href={`/shop?category=${cat.slug}`}
+                  className="group/cat flex h-full w-full items-center px-4 text-sm font-semibold text-[var(--foreground)] transition-colors duration-200 hover:bg-[var(--muted)] hover:text-[var(--brand)]"
+                >
+                  <span className="flex min-w-0 flex-1 items-center gap-3 transition-transform duration-200 group-hover/cat:translate-x-1">
+                    <FeatureIcon
+                      name={cat.icon || "package"}
+                      className="size-5 shrink-0 text-[var(--foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]"
+                      strokeWidth={1.75}
+                    />
+                    <span className="min-w-0 flex-1 truncate transition-colors duration-200 group-hover/cat:text-[var(--brand)]">
+                      {cat.name}
+                    </span>
+                    <ChevronRight className="size-4 shrink-0 text-[var(--muted-foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {Array.from({ length: skeletonCount }).map((_, i) => (
+              <li
+                key={`skel-${i}`}
+                className="flex h-[52px] shrink-0 items-center gap-3 border-b border-[var(--border)] px-4 select-none last:border-b-0"
+              >
+                <div className="size-5 shrink-0 rounded-md bg-[var(--muted)]" />
+                <div className="h-4 w-28 rounded-md bg-[var(--muted)]" />
+              </li>
+            ))}
           </ul>
-          <div className="mt-auto flex shrink-0 items-center justify-center border-t border-[var(--border)] px-3.5 py-3">
+          <div className="mt-auto flex shrink-0 items-center justify-center border-t border-[var(--border)] px-4 py-3.5">
             <Link
               href="/categories"
               className="inline-flex items-center gap-1 text-sm font-semibold tracking-normal text-[var(--brand)] transition-opacity hover:opacity-80"
@@ -106,13 +119,11 @@ export function HeroSection({
           </div>
         </aside>
 
-        <div className="relative flex min-w-0 flex-col bg-white lg:pl-52 xl:pl-56">
-          {showMarquee ? (
-            <HeroMarquee items={announcementItems} divider={divider} />
-          ) : null}
+        <div className="relative flex min-w-0 flex-col bg-white lg:pl-56 xl:pl-64">
+          <HeroMarquee items={marqueeItems} divider={divider} />
 
           <div className="relative w-full overflow-hidden leading-none">
-            {/* Mobile: keep existing 1:1 cover crop or skeleton block */}
+            {/* Mobile: 1:1 aspect crop or skeleton block with centered large + icon (no background circle) and 1:1 label */}
             <div className="relative aspect-square overflow-hidden bg-[var(--muted)] sm:hidden">
               {mobileSlides.length > 0 ? (
                 <>
@@ -134,10 +145,20 @@ export function HeroSection({
                     <SlideDots count={mobileSlides.length} index={mobileIndex} />
                   ) : null}
                 </>
-              ) : null}
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
+                  <Plus className="mb-2 size-9 text-[var(--foreground)]" strokeWidth={2} />
+                  <span className="text-base font-bold text-[var(--foreground)]">
+                    Add hero image
+                  </span>
+                  <span className="mt-1 text-xs font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
+                    1:1
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Desktop: fixed 16:9 height; image fits or skeleton block */}
+            {/* Desktop: 16:9 aspect crop or skeleton block with + icon (with background circle) and 16:9 label */}
             <div className="relative hidden aspect-video overflow-hidden bg-[var(--muted)] sm:block">
               {desktopSlides.length > 0 ? (
                 <>
@@ -159,7 +180,19 @@ export function HeroSection({
                     <SlideDots count={desktopSlides.length} index={desktopIndex} />
                   ) : null}
                 </>
-              ) : null}
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center select-none">
+                  <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white text-[var(--foreground)] shadow-xs">
+                    <Plus className="size-7" strokeWidth={2} />
+                  </div>
+                  <span className="text-lg font-bold text-[var(--foreground)]">
+                    Add hero image
+                  </span>
+                  <span className="mt-1.5 text-xs font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
+                    16:9
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -168,11 +201,22 @@ export function HeroSection({
   );
 }
 
-/**
- * Compact right→left ticker across the full hero image width.
- * Two equal halves + translateX(-50%) = seamless loop (no jump).
- * Brand fill from theme (--brand); text uses --brand-fg (white/black).
- */
+function SlideDots({ count, index }: { count: number; index: number }) {
+  return (
+    <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur-xs">
+      {Array.from({ length: count }).map((_, i) => (
+        <span
+          key={i}
+          className={[
+            "h-1.5 rounded-full transition-all duration-300",
+            i === index ? "w-5 bg-white" : "w-1.5 bg-white/50",
+          ].join(" ")}
+        />
+      ))}
+    </div>
+  );
+}
+
 function HeroMarquee({
   items,
   divider,
@@ -180,74 +224,23 @@ function HeroMarquee({
   items: string[];
   divider: string;
 }) {
-  // Repeat items so a short list still fills the viewport before looping.
-  const sequence = useMemo(() => {
-    const base = items.length > 0 ? items : [];
-    const out: string[] = [];
-    while (out.length < 8) out.push(...base);
-    return out;
-  }, [items]);
-
-  const half = (
-    <div className="flex shrink-0 items-center gap-6 px-4 whitespace-nowrap">
-      {sequence.map((segment, j) => (
-        <Fragment key={j}>
-          <span className="text-[11px] font-medium tracking-wide text-[var(--brand-fg)] sm:text-xs">
-            {segment}
-          </span>
-          <span
-            className="text-[10px] text-[var(--brand-fg)] opacity-55"
-            aria-hidden
-          >
-            {divider}
-          </span>
-        </Fragment>
-      ))}
-    </div>
-  );
-
   return (
-    <div className="relative z-10 shrink-0 overflow-hidden bg-[var(--brand)] py-1.5 leading-none select-none sm:py-2">
-      <div className="animate-marquee-rtl">
-        {half}
-        <div
-          className="flex shrink-0 items-center gap-6 px-4 whitespace-nowrap"
-          aria-hidden
-        >
-          {sequence.map((segment, j) => (
-            <Fragment key={`dup-${j}`}>
-              <span className="text-[11px] font-medium tracking-wide text-[var(--brand-fg)] sm:text-xs">
-                {segment}
-              </span>
-              <span className="text-[10px] text-[var(--brand-fg)] opacity-55">
-                {divider}
-              </span>
-            </Fragment>
-          ))}
-        </div>
+    <div className="relative overflow-hidden border-b border-[var(--border)] bg-[var(--brand)] py-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-fg)]">
+      <div className="animate-marquee-rtl gap-4 whitespace-nowrap">
+        {/* -50% only travels half of this element's own width, so a short
+            items list (or a single placeholder phrase) needs enough real
+            repeats to fill more than 2x the viewport — otherwise the loop
+            crawls almost imperceptibly, same fix aurora's BannerSection
+            already applies with its own 8x repeat. */}
+        {Array(8).fill(items).flat().map((text, i) => (
+          <Fragment key={`${text}-${i}`}>
+            <span>{text}</span>
+            <span aria-hidden className="opacity-60">
+              {divider}
+            </span>
+          </Fragment>
+        ))}
       </div>
-    </div>
-  );
-}
-
-/** Dots overlaid on the banner (bottom-center), auto-advance only. */
-function SlideDots({ count, index }: { count: number; index: number }) {
-  return (
-    <div
-      className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-1.5"
-      aria-hidden
-    >
-      {Array.from({ length: count }).map((_, i) => (
-        <span
-          key={i}
-          className={[
-            "h-1.5 rounded-full transition-all duration-300",
-            i === index
-              ? "w-5 bg-[var(--brand)]"
-              : "w-1.5 bg-white/85 ring-1 ring-black/10",
-          ].join(" ")}
-        />
-      ))}
     </div>
   );
 }

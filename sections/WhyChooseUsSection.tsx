@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Plus } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 
 export function WhyChooseUsSection() {
@@ -16,7 +17,26 @@ export function WhyChooseUsSection() {
     return (
       <section className="mx-auto max-w-[1280px] px-3 py-8 sm:px-4 sm:py-12">
         <div className="grid items-center gap-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-white lg:grid-cols-2 select-none">
-          <div className="relative aspect-[4/3] bg-[var(--muted)] lg:aspect-auto lg:min-h-[320px]" />
+          <div className="relative flex aspect-[4/3] w-full flex-col items-center justify-center bg-[var(--muted)] p-6 text-center lg:aspect-auto lg:min-h-[320px]">
+            {/* Mobile: centered larger + icon without background circle */}
+            <div className="flex flex-col items-center justify-center sm:hidden">
+              <Plus className="mb-2 size-9 text-[var(--foreground)]" strokeWidth={2} />
+              <span className="text-base font-bold text-[var(--foreground)]">
+                Add why choose us image
+              </span>
+            </div>
+
+            {/* Desktop: white circle with + icon */}
+            <div className="hidden flex-col items-center justify-center sm:flex">
+              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white text-[var(--foreground)] shadow-xs">
+                <Plus className="size-7" strokeWidth={2} />
+              </div>
+              <span className="text-lg font-bold text-[var(--foreground)]">
+                Add why choose us image
+              </span>
+            </div>
+          </div>
+
           <div className="p-5 sm:p-8">
             <h2 className="text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
               Why choose us
@@ -55,7 +75,27 @@ export function WhyChooseUsSection() {
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
-          ) : null}
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
+              {/* Mobile: centered larger + icon without background circle */}
+              <div className="flex flex-col items-center justify-center sm:hidden">
+                <Plus className="mb-2 size-9 text-[var(--foreground)]" strokeWidth={2} />
+                <span className="text-base font-bold text-[var(--foreground)]">
+                  Add why choose us image
+                </span>
+              </div>
+
+              {/* Desktop: white circle with + icon */}
+              <div className="hidden flex-col items-center justify-center sm:flex">
+                <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white text-[var(--foreground)] shadow-xs">
+                  <Plus className="size-7" strokeWidth={2} />
+                </div>
+                <span className="text-lg font-bold text-[var(--foreground)]">
+                  Add why choose us image
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         <div className="p-5 sm:p-8">
           <h2 className="text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">

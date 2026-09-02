@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Filter, X } from "lucide-react";
+import { Filter, Plus, X } from "lucide-react";
 import type { Product, ProductCategory } from "@/lib/theme-types";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Footer } from "@/components/footer/Footer";
@@ -175,7 +175,12 @@ export function ShopPageClient({
             sizes="100vw"
             className="object-cover object-center opacity-80 transition-all duration-700"
           />
-        ) : null}
+        ) : (
+          <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-[var(--foreground)] shadow-xs border border-[var(--border)] backdrop-blur-xs">
+            <Plus className="size-3.5" strokeWidth={2} />
+            <span>Add category image</span>
+          </div>
+        )}
         <div className="absolute inset-0 z-0 bg-black/45" />
         <div className="relative z-10 w-full max-w-4xl px-6 text-center text-white">
           <motion.h1

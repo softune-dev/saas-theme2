@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Plus } from "lucide-react";
 
 /** Hide entirely when the merchant hasn't written title or body — no mock copy. */
 export function BannerCtaSection({
@@ -23,13 +23,30 @@ export function BannerCtaSection({
   if (!title && !body) {
     return (
       <section className="mx-auto max-w-[1280px] px-3 py-6 sm:px-4 sm:py-10">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--brand)]/5 p-6 sm:p-10 select-none">
+        <div className="rounded-2xl border border-[var(--border)] bg-white p-6 sm:p-10 shadow-xs select-none">
           <div className="mx-auto max-w-2xl space-y-4 text-center">
-            <div className="h-7 sm:h-8 w-64 sm:w-80 mx-auto bg-[var(--muted)] rounded" />
+            {/* Mobile: centered + icon without circle */}
+            <div className="flex flex-col items-center justify-center sm:hidden">
+              <Plus className="mb-1 size-8 text-[var(--foreground)]" strokeWidth={2} />
+              <span className="text-base font-bold text-[var(--foreground)]">
+                Add banner heading & body
+              </span>
+            </div>
+
+            {/* Desktop: white circle with + icon */}
+            <div className="hidden flex-col items-center justify-center sm:flex">
+              <div className="mb-2 flex size-12 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--foreground)] shadow-xs">
+                <Plus className="size-6" strokeWidth={2} />
+              </div>
+              <span className="text-lg font-bold text-[var(--foreground)]">
+                Add banner heading & body
+              </span>
+            </div>
+
             <div className="h-4 w-72 sm:w-96 max-w-full mx-auto bg-[var(--muted)]/80 rounded" />
             <div className="mx-auto flex max-w-md flex-col gap-3 pt-2 sm:flex-row">
-              <div className="h-11 sm:h-12 w-full rounded-lg border border-[var(--border)] bg-white sm:flex-1" />
-              <div className="h-11 sm:h-12 w-full sm:w-32 rounded-[var(--theme-btn-radius)] bg-[var(--brand)]/30" />
+              <div className="h-11 sm:h-12 w-full rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 sm:flex-1" />
+              <div className="h-11 sm:h-12 w-full sm:w-32 rounded-[var(--theme-btn-radius)] bg-[var(--muted)]" />
             </div>
           </div>
         </div>

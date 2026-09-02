@@ -41,15 +41,18 @@ export const defaultSettings: SiteEditorSettings = {
   ],
   headerButtons: [],
   pages: sampleSitePages,
-  // Marketplace home order: trust strip sits directly under the hero, then
-  // catalog (categories → best sellers).
+  // Marketplace home order with all section types included by default for skeleton rendering
   sections: [
     { id: "sec-1", type: "hero" },
     { id: "sec-2", type: "features" },
     { id: "sec-3", type: "categories" },
     { id: "sec-4", type: "featureProducts" },
-    { id: "sec-5", type: "whyChooseUs" },
-    { id: "sec-6", type: "footer" },
+    { id: "sec-5", type: "productShowcase" },
+    { id: "sec-6", type: "categoryShowcase" },
+    { id: "sec-7", type: "whyChooseUs" },
+    { id: "sec-8", type: "testimonials" },
+    { id: "sec-9", type: "banner" },
+    { id: "sec-10", type: "footer" },
   ],
   announcementItems: [],
   announcementDivider: "·",
@@ -68,7 +71,7 @@ export const defaultSettings: SiteEditorSettings = {
   why2: "",
   why3Title: "",
   why3: "",
-  categoryShowcaseTitle: "Popular departments",
+  categoryShowcaseTitle: "Popular categories",
   categoryShowcaseCategoryIds: [],
   featuresTitle: "Why customers trust us",
   feature1Title: "",

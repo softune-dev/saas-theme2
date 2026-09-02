@@ -7,9 +7,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ChevronDown,
   ChevronRight,
+  Heart,
   Menu,
   Search,
-  User,
   X,
 } from "lucide-react";
 import { SiteLogo } from "@/components/brand/SiteLogo";
@@ -21,7 +21,7 @@ import { formatTaka } from "@/lib/utils";
 
 /**
  * Marketplace header (reference pattern):
- *  1. Top: logo · search · account · cart total
+ *  1. Top: logo · search · wishlist · account · cart total
  *  2. One nav row: brand "All Categories" dropdown + editor navLinks inline
  * Active link: brand color + sliding underline (layoutId, not remounted).
  */
@@ -153,7 +153,7 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-white">
-      {/* Top bar: logo · search · actions */}
+      {/* Top bar: logo · search (desktop) · actions */}
       <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3">
         <button
           type="button"
@@ -166,6 +166,7 @@ export function Header({
 
         <SiteLogo className="shrink-0" />
 
+        {/* Desktop Search Bar */}
         <form
           onSubmit={onSearch}
           className="mx-auto hidden min-w-0 max-w-xl flex-1 sm:flex"
@@ -187,14 +188,39 @@ export function Header({
           </div>
         </form>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* Wishlist / Love Icon (Visual only) */}
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-lg p-2 text-[var(--foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--brand)]"
+            aria-label="Wishlist"
+          >
+            <Heart className="size-6.5 sm:size-7" strokeWidth={1.5} />
+          </button>
+
+          {/* Account Icon (uses public/assets/user.svg) */}
           <Link
             href="/login"
-            className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] sm:inline-flex"
+            className="inline-flex items-center justify-center rounded-lg p-2 text-[var(--foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--brand)]"
             aria-label="Account"
           >
-            <User className="size-4" />
+            <span
+              aria-hidden
+              className="block size-6.5 bg-[var(--foreground)] transition-colors sm:size-7"
+              style={{
+                WebkitMaskImage: "url(/assets/user.svg)",
+                maskImage: "url(/assets/user.svg)",
+                WebkitMaskSize: "contain",
+                maskSize: "contain",
+                WebkitMaskRepeat: "no-repeat",
+                maskRepeat: "no-repeat",
+                WebkitMaskPosition: "center",
+                maskPosition: "center",
+              }}
+            />
           </Link>
+
+          {/* Cart Button */}
           <button
             type="button"
             onClick={openDrawer}
@@ -229,195 +255,212 @@ export function Header({
         </div>
       </div>
 
-      {/* Mobile search */}
-      <form
-        onSubmit={onSearch}
-        className="border-t border-[var(--border)] px-3 py-2 sm:hidden"
-      >
-        <div className="flex overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--muted)]">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search products…"
-            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none"
-          />
-          <button
-            type="submit"
-            className="bg-[var(--brand)] px-3 text-white"
-            aria-label="Search"
-          >
-            <Search className="size-4" />
-          </button>
-        </div>
-      </form>
+      {/* Mobile Search Bar Row (Under top bar on mobile screens ONLY) */}
+      <div className="border-t border-[var(--border)] bg-white px-3 py-2 sm:hidden">
+        <form onSubmit={onSearch} className="flex min-w-0 flex-1">
+          <div className="flex w-full overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--muted)] focus-within:border-[var(--brand)]">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search products, brands, categories…"
+              className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-[var(--muted-foreground)]"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="inline-flex items-center justify-center bg-[var(--brand)] px-3 text-white"
+            >
+              <Search className="size-3.5" strokeWidth={2.25} />
+            </button>
+          </div>
+        </form>
+      </div>
 
-      {/* Single desktop nav row: All Categories dropdown + page links */}
-      <nav
-        aria-label="Main"
-        className="hidden border-t border-[var(--border)] bg-[var(--muted)] lg:block"
-      >
-        <div className="mx-auto flex max-w-[1280px] items-center gap-1 px-3 py-1.5 sm:px-4">
-          <div ref={catsRef} className="relative shrink-0">
+      {/* Desktop Nav row: "All Categories" dropdown + inline page links */}
+      <div className="hidden border-t border-[var(--border)] bg-white sm:block">
+        <div className="mx-auto flex max-w-[1280px] items-stretch gap-2 px-3 sm:px-4">
+          <div className="relative shrink-0 py-1.5" ref={catsRef}>
             <button
               type="button"
-              aria-expanded={catsOpen}
-              aria-haspopup="menu"
               onClick={() => setCatsOpen((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-3.5 py-2.5 text-sm font-bold text-white"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--brand-fg)] transition-opacity hover:opacity-90 sm:text-sm"
+              aria-expanded={catsOpen}
+              aria-haspopup="true"
             >
-              <Menu className="size-4" strokeWidth={2.5} />
-              All Categories
+              <Menu className="size-4 shrink-0" />
+              <span>All Categories</span>
               <ChevronDown
-                className={`size-4 transition-transform ${catsOpen ? "rotate-180" : ""}`}
+                className={[
+                  "size-4 shrink-0 transition-transform duration-200",
+                  catsOpen ? "rotate-180" : "",
+                ].join(" ")}
               />
             </button>
 
-            {catsOpen ? (
-              <div
-                role="menu"
-                className="absolute left-0 top-full z-50 mt-1.5 max-h-[min(70vh,28rem)] w-72 overflow-y-auto rounded-xl border border-[var(--border)] bg-white py-1.5 shadow-xl"
-              >
-                <Link
-                  href="/categories"
-                  role="menuitem"
-                  onClick={() => setCatsOpen(false)}
-                  className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2.5 text-xs font-semibold text-[var(--brand)] hover:bg-[var(--muted)]"
+            <AnimatePresence>
+              {catsOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 top-full z-50 mt-1 w-64 overflow-hidden rounded-xl border border-[var(--border)] bg-white p-1.5 shadow-xl"
                 >
-                  View all departments
-                  <ChevronRight className="size-3.5" />
-                </Link>
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/shop?category=${cat.slug}`}
-                    role="menuitem"
-                    onClick={() => setCatsOpen(false)}
-                    className="flex items-center justify-between gap-2 px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--muted)] hover:text-[var(--brand)]"
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <FeatureIcon
-                        name={cat.icon || "package"}
-                        className="size-4 shrink-0 text-[var(--muted-foreground)]"
-                        strokeWidth={1.75}
-                      />
-                      <span className="truncate">{cat.name}</span>
-                    </span>
-                    <ChevronRight className="size-3.5 shrink-0 text-[var(--muted-foreground)]" />
-                  </Link>
-                ))}
-              </div>
-            ) : null}
+                  {categories.length > 0 ? (
+                    categories.map((c) => (
+                      <Link
+                        key={c.id}
+                        href={`/shop?category=${encodeURIComponent(c.slug)}`}
+                        onClick={() => setCatsOpen(false)}
+                        className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm text-[var(--foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--brand)]"
+                      >
+                        <span className="flex items-center gap-2.5 min-w-0">
+                          <FeatureIcon
+                            name={c.icon || "package"}
+                            className="size-4 shrink-0 text-[var(--muted-foreground)] group-hover:text-[var(--brand)]"
+                            strokeWidth={1.5}
+                          />
+                          <span className="truncate">{c.name}</span>
+                        </span>
+                        <ChevronRight className="size-4 shrink-0 text-[var(--muted-foreground)] opacity-0 transition-opacity group-hover:opacity-100 group-hover:text-[var(--brand)]" />
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="p-3 text-center text-xs text-[var(--muted-foreground)]">
+                      No categories yet
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <Suspense fallback={<div className="min-w-0 flex-1 pl-2" />}>
+          <Suspense
+            fallback={
+              <div className="h-9 min-w-0 flex-1 animate-pulse bg-[var(--muted)] rounded-lg" />
+            }
+          >
             <NavLinksBar links={settings.navLinks} />
           </Suspense>
         </div>
-      </nav>
+      </div>
 
-      {/* Mobile drawer — slide in from the left (not instant) */}
+      {/* Mobile drawer backdrop + sidebar menu */}
       <AnimatePresence>
-        {mobileOpen ? (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <motion.button
-              type="button"
+        {mobileOpen && (
+          <>
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0 bg-black/40"
-              aria-label="Close menu"
               onClick={() => setMobileOpen(false)}
+              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs lg:hidden"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.85 }}
-              className="absolute inset-y-0 left-0 flex w-[min(100%,20rem)] flex-col bg-white shadow-xl"
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 z-50 flex w-full max-w-xs flex-col bg-white p-5 shadow-2xl lg:hidden"
             >
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+              <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
                 <SiteLogo />
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  aria-label="Close"
-                  className="rounded-lg p-2 text-[var(--muted-foreground)]"
+                  className="rounded-lg p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  aria-label="Close menu"
                 >
                   <X className="size-5" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-3">
-                <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                  Menu
-                </p>
-                <Suspense fallback={null}>
-                  <MobileNavLinks
-                    links={settings.navLinks}
-                    onNavigate={() => setMobileOpen(false)}
+
+              <form onSubmit={onSearch} className="mt-4">
+                <div className="flex overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--muted)]">
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search products…"
+                    className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none"
                   />
-                </Suspense>
-                <p className="mt-4 px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-                  Categories
-                </p>
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/shop?category=${cat.slug}`}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--muted)]"
+                  <button
+                    type="submit"
+                    className="bg-[var(--brand)] px-3 text-white"
                   >
-                    <FeatureIcon
-                      name={cat.icon || "package"}
-                      className="size-4 shrink-0 text-[var(--foreground)]"
-                      strokeWidth={1.75}
-                    />
-                    <span className="truncate">{cat.name}</span>
-                  </Link>
-                ))}
+                    <Search className="size-4" />
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-6 flex-1 overflow-y-auto space-y-6">
+                <div>
+                  <nav className="space-y-1">
+                    {withHomeLink(settings.navLinks).map((link) => (
+                      <Link
+                        key={link.id}
+                        href={link.path || "/"}
+                        onClick={() => setMobileOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-base font-semibold text-[var(--foreground)] hover:bg-[var(--muted)]"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+                    Categories
+                  </p>
+                  <nav className="mt-2 space-y-1">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/shop?category=${encodeURIComponent(cat.slug)}`}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--muted)]"
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <FeatureIcon
+                            name={cat.icon || "package"}
+                            className="size-4 text-[var(--muted-foreground)]"
+                          />
+                          <span>{cat.name}</span>
+                        </span>
+                        <ChevronRight className="size-4 text-[var(--muted-foreground)]" />
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+
+              <div className="border-t border-[var(--border)] pt-4">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--border)] py-2.5 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--muted)]"
+                >
+                  <span
+                    aria-hidden
+                    className="block size-5 bg-[var(--foreground)]"
+                    style={{
+                      WebkitMaskImage: "url(/assets/user.svg)",
+                      maskImage: "url(/assets/user.svg)",
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskPosition: "center",
+                      maskPosition: "center",
+                    }}
+                  />
+                  <span>Sign In / Register</span>
+                </Link>
               </div>
             </motion.div>
-          </div>
-        ) : null}
+          </>
+        )}
       </AnimatePresence>
     </header>
-  );
-}
-
-function MobileNavLinks({
-  links,
-  onNavigate,
-}: {
-  links: NavLink[];
-  onNavigate: () => void;
-}) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const search = searchParams.toString()
-    ? `?${searchParams.toString()}`
-    : "";
-  const items = useMemo(() => withHomeLink(links), [links]);
-
-  return (
-    <>
-      {items.map((link) => {
-        const active = isNavActive(pathname, search, link.path);
-        return (
-          <Link
-            key={link.id}
-            href={link.path || "/"}
-            onClick={onNavigate}
-            className={[
-              "block rounded-lg px-3 py-2.5 text-sm font-medium",
-              active
-                ? "bg-[var(--brand)]/10 font-semibold text-[var(--brand)]"
-                : "text-[var(--foreground)] hover:bg-[var(--muted)]",
-            ].join(" ")}
-          >
-            {link.label}
-          </Link>
-        );
-      })}
-    </>
   );
 }

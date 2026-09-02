@@ -163,6 +163,7 @@ const bigShouldersDisplay = Big_Shoulders({
   variable: "--font-big-shoulders-display",
   display: "swap",
   preload: false,
+  adjustFontFallback: false,
 });
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -254,22 +255,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const theme = resolveTheme(config);
   const siteName = config.site.name || theme.siteName;
 
-  // Root layout metadata is the site-wide default every page inherits
-  // (favicon, OG image, indexing) unless a specific page overrides it — so
-  // this must read the merchant's real SEO settings, not invent a generic
-  // title/description from scratch. getPageSeo("") already merges page SEO
-  // over site SEO over business description (see _resolve_seo on the
-  // backend) — previously none of og_title/og_description/og_image/favicon/
-  // noindex ever reached here, so Settings → SEO silently did nothing.
   const seo = await getPageSeo("", host);
 
   return {
     metadataBase: new URL(`https://${host}`),
-    // No title.template here: every page's own generateMetadata already
-    // returns a fully-composed title (getPageSeo()'s title, or e.g.
-    // `${product.name} | ${siteName}` on the product page) — a template
-    // would suffix the site name onto an already-suffixed string, producing
-    // "Home | Niyenen | Niyenen".
     title: seo.title,
     description: seo.description,
     keywords: seo.keywords || undefined,
@@ -299,8 +288,6 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const host = await getSiteHost();
-  // notFound() is illegal here, so resolve the config without it and render
-  // a real explanation when there's nothing to show.
   const config = await fetchSiteConfig(host);
 
   if (!config) {
@@ -315,16 +302,11 @@ export default async function RootLayout({
 
   const theme = resolveTheme(config);
   const rawSeo = config.site.seo ?? {};
-  // Header dropdown + mobile drawer need the same real categories as the
-  // homepage rail — fetched once per request here, not from sample-data.
   const categories = await getSiteCategories(host);
 
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col antialiased bg-[var(--background)] text-[var(--foreground)]">
-        {/* Merchant-provided tracking — only loaded when an id is actually
-         * set (Site Settings → SEO), so a site with none pays zero cost.
-         * Matches templates/aurora/app/layout.tsx exactly. */}
         {rawSeo.google_analytics ? (
           <>
             <Script

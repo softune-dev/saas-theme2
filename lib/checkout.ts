@@ -37,6 +37,11 @@ export type PublicOrderItemOut = {
   quantity: number;
   unit_price_cents: number;
   total_cents: number;
+  /** Set only when an active Event's discount actually applied to this
+   * line at checkout — permanent, from the order's own immutable snapshot,
+   * not a live lookup. */
+  event_name?: string | null;
+  event_discount_percent?: number | null;
 };
 
 export type PublicOrderOut = {

@@ -13,7 +13,7 @@
  * change at all.
  */
 import { colorNameToHex } from "./color-names";
-import { Product, ProductCategory } from "./theme-types";
+import { Event, Product, ProductCategory } from "./theme-types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -50,6 +50,30 @@ type PublicProduct = {
   freeDelivery: boolean;
   deliveryCharges: { name: string; charge: number }[];
 };
+
+type PublicEvent = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  image: string;
+  ctaLabel: string;
+  discountPercent: number;
+  productIds: string[];
+};
+
+function adaptEvent(e: PublicEvent): Event {
+  return {
+    id: e.id,
+    slug: e.slug,
+    name: e.name,
+    description: e.description,
+    image: e.image,
+    ctaLabel: e.ctaLabel,
+    discountPercent: e.discountPercent,
+    productIds: e.productIds,
+  };
+}
 
 function adaptCategory(c: PublicCategory): ProductCategory {
   return {
@@ -165,6 +189,14 @@ async function fetchJson<T>(path: string): Promise<T | null> {
 export async function getSiteCategories(host: string): Promise<ProductCategory[]> {
   const data = await fetchJson<PublicCategory[]>(`/public/site/${host}/categories`);
   return (data ?? []).map(adaptCategory);
+}
+
+/** Active sale/promo campaigns for this site — GET /public/site/{host}
+ * /events. Already filtered to active-only by the backend. Empty array
+ * (never fake events) when the site has none yet or the request fails. */
+export async function getSiteEvents(host: string): Promise<Event[]> {
+  const data = await fetchJson<PublicEvent[]>(`/public/site/${host}/events`);
+  return (data ?? []).map(adaptEvent);
 }
 
 /** Up to 100 active products for this site (public endpoint max page size). */

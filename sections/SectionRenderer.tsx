@@ -1,9 +1,10 @@
 "use client";
 
 import { useTheme } from "@/lib/theme-context";
-import type { Product, ProductCategory } from "@/lib/theme-types";
+import type { Event, Product, ProductCategory } from "@/lib/theme-types";
 import { Footer } from "@/components/footer/Footer";
 import { HeroSection } from "./HeroSection";
+import { EventsSection } from "./EventsSection";
 import { FeaturesSection } from "./FeaturesSection";
 import { CategoriesSection } from "./CategoriesSection";
 import { FeatureProductsSection } from "./FeatureProductsSection";
@@ -39,11 +40,13 @@ type SectionRendererProps = {
   /** Real backend catalog for this site — see lib/public-catalog.ts. */
   categories: ProductCategory[];
   products: Product[];
+  events: Event[];
 };
 
 export function SectionRenderer({
   categories,
   products,
+  events,
 }: SectionRendererProps) {
   const { settings } = useTheme();
   let footerRendered = false;
@@ -66,6 +69,14 @@ export function SectionRenderer({
           }
           case "features":
             return <FeaturesSection key={sec.id} />;
+          case "events":
+            return (
+              <EventsSection
+                key={sec.id}
+                selectedEventIds={settings.selectedEventIds ?? []}
+                events={events}
+              />
+            );
           case "categories":
             return (
               <CategoriesSection key={sec.id} categories={categories} />

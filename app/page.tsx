@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getPageSeo, getSiteHost } from "@/lib/get-site";
-import { getSiteCategories, getSiteProducts } from "@/lib/public-catalog";
+import { getSiteCategories, getSiteEvents, getSiteProducts } from "@/lib/public-catalog";
 import { HomePageClient } from "./HomePageClient";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,10 +18,11 @@ export default async function HomePage() {
   // Fetched once here, server-side, and threaded through every section that
   // needs it — see SectionRenderer.tsx — rather than each section fetching
   // (and re-fetching) its own copy.
-  const [categories, products] = await Promise.all([
+  const [categories, products, events] = await Promise.all([
     getSiteCategories(host),
     getSiteProducts(host),
+    getSiteEvents(host),
   ]);
 
-  return <HomePageClient categories={categories} products={products} />;
+  return <HomePageClient categories={categories} products={products} events={events} />;
 }

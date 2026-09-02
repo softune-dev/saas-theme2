@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Filter, Plus, X } from "lucide-react";
-import type { Product, ProductCategory } from "@/lib/theme-types";
+import type { Event, Product, ProductCategory } from "@/lib/theme-types";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Footer } from "@/components/footer/Footer";
 
@@ -27,6 +27,7 @@ const SORT_OPTIONS = [
 type ShopPageClientProps = {
   categories: ProductCategory[];
   products: Product[];
+  events: Event[];
 };
 
 /**
@@ -37,6 +38,7 @@ type ShopPageClientProps = {
 export function ShopPageClient({
   categories: allCategories,
   products: allProducts,
+  events,
 }: ShopPageClientProps) {
   const searchParams = useSearchParams();
 
@@ -62,7 +64,16 @@ export function ShopPageClient({
   const sortFromUrl = searchParams.get("sort") || "";
   const q = (searchParams.get("q") || "").trim().toLowerCase();
 
+  // Same graceful fallback as category — resolves to null (no filter) when
+  // the slug doesn't match any real event.
+  const eventFromUrl = useMemo(() => {
+    const raw = searchParams.get("event");
+    if (!raw) return null;
+    return events.find((e) => e.slug.toLowerCase() === raw.toLowerCase()) ?? null;
+  }, [searchParams, events]);
+
   const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(eventFromUrl);
   const [selectedPrice, setSelectedPrice] = useState<string>("All");
   const [selectedSort, setSelectedSort] = useState<string>(() => {
     if (sortFromUrl === "new") return "Newest";
@@ -78,6 +89,10 @@ export function ShopPageClient({
   }, [categoryFromUrl]);
 
   useEffect(() => {
+    setSelectedEvent(eventFromUrl);
+  }, [eventFromUrl]);
+
+  useEffect(() => {
     if (sortFromUrl === "new") setSelectedSort("Newest");
     else if (sortFromUrl === "price-asc") setSelectedSort("Price: Low to High");
     else if (sortFromUrl === "price-desc") setSelectedSort("Price: High to Low");
@@ -89,6 +104,11 @@ export function ShopPageClient({
 
     if (selectedCategory !== "All") {
       result = result.filter((p) => p.categoryName === selectedCategory);
+    }
+    // Event filter — a product's id must be in the event's own productIds,
+    // not a name/slug match like category (a product has no eventSlug).
+    if (selectedEvent) {
+      result = result.filter((p) => selectedEvent.productIds.includes(p.id));
     }
     if (filterFromUrl === "featured") {
       result = result.filter((p) => p.featured);
@@ -126,14 +146,16 @@ export function ShopPageClient({
   }, [
     allProducts,
     selectedCategory,
+    selectedEvent,
     selectedPrice,
     selectedSort,
     filterFromUrl,
     q,
   ]);
 
-  const displayTitle =
-    filterFromUrl === "featured"
+  const displayTitle = selectedEvent
+    ? selectedEvent.name
+    : filterFromUrl === "featured"
       ? "Best Sellers"
       : sortFromUrl === "new" || selectedSort === "Newest"
         ? "New Arrivals"
@@ -143,10 +165,12 @@ export function ShopPageClient({
             ? "All Products"
             : selectedCategory;
 
-  // Category banner from catalog; "All" falls back to first available banner.
+  // Category banner from catalog; "All" falls back to first available
+  // banner. An active event's own image takes precedence over both.
   const firstBanner = allCategories.find((c) => c.banner)?.banner || "";
-  const currentBanner =
-    selectedCategory === "All"
+  const currentBanner = selectedEvent?.image
+    ? selectedEvent.image
+    : selectedCategory === "All"
       ? firstBanner
       : allCategories.find((c) => c.name === selectedCategory)?.banner ||
         firstBanner;

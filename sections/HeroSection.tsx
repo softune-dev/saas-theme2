@@ -227,7 +227,7 @@ function HeroMarquee({
 }) {
   return (
     <div className="relative overflow-hidden border-b border-[var(--border)] bg-[var(--brand)] py-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-fg)]">
-      <div className="flex w-max animate-marquee gap-8 whitespace-nowrap">
+      <div className="animate-marquee-rtl flex items-center gap-8 whitespace-nowrap">
         {items.concat(items, items, items).map((text, i) => (
           <Fragment key={`${text}-${i}`}>
             <span>{text}</span>

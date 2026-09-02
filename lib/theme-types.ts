@@ -15,6 +15,7 @@ export type SitePageType =
 export type SectionType =
   | "banner"
   | "hero"
+  | "events"
   | "categories"
   | "featureProducts"
   | "productShowcase"
@@ -83,6 +84,10 @@ export type SiteEditorSettings = {
   /** Hero is images only — no text, no buttons. 16:9 is required and drives
    * desktop; 1:1 is optional and mobile-only, falling back to 16:9. */
   heroImages: string[]; heroImagesSquare: string[];
+  /** Up to 3 featured sale/promo campaigns — merchant picks which of their
+   * real Events to show right under Hero. Curated only: an empty selection
+   * means the section shows its own skeleton, never "show every event". */
+  selectedEventIds: string[];
   categoriesTitle: string; selectedCategoryIds: string[];
   featureProductsTitle: string; selectedProductIds: string[];
   /** Product showcase — picks one catalog product; UI pulls name/price/image from it. */
@@ -192,6 +197,21 @@ export type CartItem = {
   quantity: number;
   selectedSize?: string;
   selectedColor?: string;
+};
+
+/** A merchant-run sale/promo campaign. Real backend data — see
+ * lib/public-catalog.ts's getSiteEvents. discountPercent is the real
+ * checkout-honored discount (already applied to `price` on any Product in
+ * productIds — see Product.originalPrice/discountPercent), not cosmetic. */
+export type Event = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  image: string;
+  ctaLabel: string;
+  discountPercent: number;
+  productIds: string[];
 };
 
 // Public Backend API Contracts for SEO & Dynamic Site Fetching

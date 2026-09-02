@@ -706,9 +706,16 @@ export function CheckoutPageClient({
                           </span>
                         )}
                       </div>
-                      <span className="min-w-0 flex-1 truncate text-sm text-[var(--foreground)]">
-                        {line.quantity}× {line.name}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-sm text-[var(--foreground)]">
+                          {line.quantity}× {line.name}
+                        </span>
+                        {line.event_name ? (
+                          <span className="block text-xs font-semibold text-[var(--brand)]">
+                            {line.event_name} — {line.event_discount_percent}% off
+                          </span>
+                        ) : null}
+                      </div>
                       <span className="shrink-0 text-sm font-semibold tabular-nums">
                         {formatTaka(line.total_cents / 100)}
                       </span>

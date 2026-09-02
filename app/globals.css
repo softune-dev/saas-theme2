@@ -108,8 +108,7 @@ h4,
 .animate-marquee-rtl {
   display: flex;
   width: max-content;
-  /* Match Aurora's slow ticker — fast scroll reads as noise on a marketplace hero. */
-  animation: marquee-rtl 100s linear infinite;
+  animation: marquee-rtl 30s linear infinite;
   will-change: transform;
 }
 

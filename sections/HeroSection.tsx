@@ -23,10 +23,12 @@ function useSlideIndex(count: number) {
   return safe;
 }
 
-// No real store policy is known yet at this point, so this is instructional
-// placeholder text, not a fabricated claim — same rule as every other empty
-// state in this theme.
-const DEFAULT_MARQUEE_ITEMS = ["Your announcement goes here"];
+/** Default marquee fallback items when no custom announcement text is configured. */
+const DEFAULT_MARQUEE_ITEMS = [
+  "FREE SHIPPING ON ORDERS OVER ৳2,500",
+  "CASH ON DELIVERY AVAILABLE NATIONWIDE",
+  "EASY 7-DAY RETURNS & EXCHANGES",
+];
 
 /**
  * Marketplace hero: category rail + multi-image promo slider.
@@ -62,11 +64,10 @@ export function HeroSection({
   const divider = settings.announcementDivider?.trim() || "·";
 
   // Category rail layout: Max 9 categories total.
-  // When categories < 5, show real categories on top + fill remainder up to 9 with skeletons.
-  // When categories >= 5, show real categories only (no skeletons).
+  // Fills all remaining slots up to 9 with skeletons.
   const displayCategories = categories.slice(0, 9);
   const realCount = displayCategories.length;
-  const skeletonCount = realCount < 5 ? 9 - realCount : 0;
+  const skeletonCount = Math.max(0, 9 - realCount);
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-3 sm:px-4 sm:py-4">
@@ -226,13 +227,8 @@ function HeroMarquee({
 }) {
   return (
     <div className="relative overflow-hidden border-b border-[var(--border)] bg-[var(--brand)] py-2 text-xs font-semibold uppercase tracking-wider text-[var(--brand-fg)]">
-      <div className="animate-marquee-rtl gap-4 whitespace-nowrap">
-        {/* -50% only travels half of this element's own width, so a short
-            items list (or a single placeholder phrase) needs enough real
-            repeats to fill more than 2x the viewport — otherwise the loop
-            crawls almost imperceptibly, same fix aurora's BannerSection
-            already applies with its own 8x repeat. */}
-        {Array(8).fill(items).flat().map((text, i) => (
+      <div className="flex w-max animate-marquee gap-8 whitespace-nowrap">
+        {items.concat(items, items, items).map((text, i) => (
           <Fragment key={`${text}-${i}`}>
             <span>{text}</span>
             <span aria-hidden className="opacity-60">

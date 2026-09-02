@@ -283,7 +283,7 @@ export function Header({
             <button
               type="button"
               onClick={() => setCatsOpen((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-[var(--brand-fg)] transition-opacity hover:opacity-90 sm:text-sm"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-3.5 py-2 text-sm font-medium tracking-normal text-[var(--brand-fg)] transition-opacity hover:opacity-90"
               aria-expanded={catsOpen}
               aria-haspopup="true"
             >

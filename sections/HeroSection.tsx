@@ -61,29 +61,39 @@ export function HeroSection({
       <div className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-white">
         <aside className="absolute inset-y-0 left-0 z-10 hidden w-52 flex-col border-r border-[var(--border)] bg-white lg:flex xl:w-56">
           <ul className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-            {categories.map((cat) => (
-              <li
-                key={cat.id}
-                className="flex min-h-11 flex-1 border-b border-[var(--border)] last:border-b-0"
-              >
-                <Link
-                  href={`/shop?category=${cat.slug}`}
-                  className="group/cat flex h-full w-full items-center px-3.5 text-sm font-medium text-[var(--foreground)] transition-colors duration-200 hover:bg-[var(--muted)] hover:text-[var(--brand)]"
-                >
-                  <span className="flex min-w-0 flex-1 items-center gap-2.5 transition-transform duration-200 group-hover/cat:translate-x-1">
-                    <FeatureIcon
-                      name={cat.icon || "package"}
-                      className="size-4 shrink-0 text-[var(--foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]"
-                      strokeWidth={1.75}
-                    />
-                    <span className="min-w-0 flex-1 truncate transition-colors duration-200 group-hover/cat:text-[var(--brand)]">
-                      {cat.name}
-                    </span>
-                    <ChevronRight className="size-4 shrink-0 text-[var(--muted-foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]" />
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {categories.length > 0
+              ? categories.map((cat) => (
+                  <li
+                    key={cat.id}
+                    className="flex min-h-11 flex-1 border-b border-[var(--border)] last:border-b-0"
+                  >
+                    <Link
+                      href={`/shop?category=${cat.slug}`}
+                      className="group/cat flex h-full w-full items-center px-3.5 text-sm font-medium text-[var(--foreground)] transition-colors duration-200 hover:bg-[var(--muted)] hover:text-[var(--brand)]"
+                    >
+                      <span className="flex min-w-0 flex-1 items-center gap-2.5 transition-transform duration-200 group-hover/cat:translate-x-1">
+                        <FeatureIcon
+                          name={cat.icon || "package"}
+                          className="size-4 shrink-0 text-[var(--foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]"
+                          strokeWidth={1.75}
+                        />
+                        <span className="min-w-0 flex-1 truncate transition-colors duration-200 group-hover/cat:text-[var(--brand)]">
+                          {cat.name}
+                        </span>
+                        <ChevronRight className="size-4 shrink-0 text-[var(--muted-foreground)] transition-colors duration-200 group-hover/cat:text-[var(--brand)]" />
+                      </span>
+                    </Link>
+                  </li>
+                ))
+              : Array.from({ length: 6 }).map((_, i) => (
+                  <li
+                    key={i}
+                    className="flex min-h-11 flex-1 border-b border-[var(--border)] last:border-b-0 items-center px-3.5 gap-2.5"
+                  >
+                    <div className="size-4 rounded bg-[var(--muted)]" />
+                    <div className="h-3.5 w-24 bg-[var(--muted)] rounded" />
+                  </li>
+                ))}
           </ul>
           <div className="mt-auto flex shrink-0 items-center justify-center border-t border-[var(--border)] px-3.5 py-3">
             <Link
@@ -102,46 +112,53 @@ export function HeroSection({
           ) : null}
 
           <div className="relative w-full overflow-hidden leading-none">
-            {/* Mobile: keep existing 1:1 cover crop */}
-            <div className="relative aspect-square overflow-hidden sm:hidden">
-              {mobileSlides.map((src, i) => (
-                <Image
-                  key={`m-${src}-${i}`}
-                  src={src}
-                  alt=""
-                  fill
-                  priority={i === 0}
-                  sizes="100vw"
-                  className={[
-                    "object-cover object-center transition-opacity duration-700 ease-out",
-                    i === mobileIndex ? "opacity-100" : "opacity-0",
-                  ].join(" ")}
-                />
-              ))}
-              {mobileSlides.length > 1 ? (
-                <SlideDots count={mobileSlides.length} index={mobileIndex} />
+            {/* Mobile: keep existing 1:1 cover crop or skeleton block */}
+            <div className="relative aspect-square overflow-hidden bg-[var(--muted)] sm:hidden">
+              {mobileSlides.length > 0 ? (
+                <>
+                  {mobileSlides.map((src, i) => (
+                    <Image
+                      key={`m-${src}-${i}`}
+                      src={src}
+                      alt=""
+                      fill
+                      priority={i === 0}
+                      sizes="100vw"
+                      className={[
+                        "object-cover object-center transition-opacity duration-700 ease-out",
+                        i === mobileIndex ? "opacity-100" : "opacity-0",
+                      ].join(" ")}
+                    />
+                  ))}
+                  {mobileSlides.length > 1 ? (
+                    <SlideDots count={mobileSlides.length} index={mobileIndex} />
+                  ) : null}
+                </>
               ) : null}
             </div>
 
-            {/* Desktop: fixed 16:9 height; image fits (no edge crop), top-aligned
-             * so it touches the banner; dots sit inside the bottom. */}
-            <div className="relative hidden aspect-video overflow-hidden bg-white sm:block">
-              {desktopSlides.map((src, i) => (
-                <Image
-                  key={`d-${src}-${i}`}
-                  src={src}
-                  alt=""
-                  fill
-                  priority={i === 0}
-                  sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 70vw, 1024px"
-                  className={[
-                    "object-contain object-top transition-opacity duration-700 ease-out",
-                    i === desktopIndex ? "opacity-100" : "opacity-0",
-                  ].join(" ")}
-                />
-              ))}
-              {desktopSlides.length > 1 ? (
-                <SlideDots count={desktopSlides.length} index={desktopIndex} />
+            {/* Desktop: fixed 16:9 height; image fits or skeleton block */}
+            <div className="relative hidden aspect-video overflow-hidden bg-[var(--muted)] sm:block">
+              {desktopSlides.length > 0 ? (
+                <>
+                  {desktopSlides.map((src, i) => (
+                    <Image
+                      key={`d-${src}-${i}`}
+                      src={src}
+                      alt=""
+                      fill
+                      priority={i === 0}
+                      sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 70vw, 1024px"
+                      className={[
+                        "object-contain object-top transition-opacity duration-700 ease-out",
+                        i === desktopIndex ? "opacity-100" : "opacity-0",
+                      ].join(" ")}
+                    />
+                  ))}
+                  {desktopSlides.length > 1 ? (
+                    <SlideDots count={desktopSlides.length} index={desktopIndex} />
+                  ) : null}
+                </>
               ) : null}
             </div>
           </div>

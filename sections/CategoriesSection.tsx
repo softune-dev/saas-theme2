@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 import { FeatureIcon } from "@/lib/icon-map";
 import type { ProductCategory } from "@/lib/theme-types";
@@ -27,7 +28,7 @@ export function CategoriesSection({
       : [];
   const cats = fromSettings.length > 0 ? fromSettings : allCategories;
 
-  if (cats.length === 0) return null;
+  const isSkeleton = cats.length === 0;
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-6 sm:px-4 sm:py-8">
@@ -46,7 +47,26 @@ export function CategoriesSection({
       {/* overflow-x clips both axes — pad the lift distance so hover
        * -translate-y doesn't chop the top edge of the card. */}
       <div className="flex gap-3 overflow-x-auto pt-3 pb-2 scrollbar-none sm:gap-3.5 sm:pt-4">
-        {cats.map((cat) => (
+        {isSkeleton
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex shrink-0 flex-col w-[5.5rem] items-center sm:h-44 sm:w-36 sm:items-stretch select-none"
+              >
+                <div className="relative flex w-full flex-col overflow-hidden bg-white border border-[var(--border)] aspect-square rounded-full sm:aspect-auto sm:min-h-0 sm:flex-1 sm:rounded-xl items-center justify-center p-3 text-center">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--muted-foreground)] mb-1 sm:mb-2">
+                    <Plus className="size-4 sm:size-5" strokeWidth={2} />
+                  </div>
+                  <p className="hidden truncate px-1 text-center text-xs font-semibold text-[var(--muted-foreground)] sm:block">
+                    Add category {i + 1}
+                  </p>
+                </div>
+                <p className="mt-1.5 w-full text-center text-[11px] font-semibold text-[var(--muted-foreground)] sm:hidden">
+                  Add category {i + 1}
+                </p>
+              </div>
+            ))
+          : cats.map((cat) => (
           <Link
             key={cat.id}
             href={`/shop?category=${cat.slug}`}

@@ -11,7 +11,7 @@ import { FeatureIcon } from "@/lib/icon-map";
 export function FeaturesSection() {
   const { settings } = useTheme();
 
-  const items = [
+  const filtered = [
     {
       title: settings.feature1Title?.trim(),
       body: settings.feature1?.trim(),
@@ -32,7 +32,34 @@ export function FeaturesSection() {
     },
   ].filter((item) => item.title || item.body);
 
-  if (items.length === 0) return null;
+  const items: Array<{
+    title?: string;
+    body?: string;
+    iconName?: string;
+    image?: string;
+  }> =
+    filtered.length > 0
+      ? filtered
+      : [
+          {
+            title: "Nationwide Delivery",
+            body: "Fast and reliable shipping to your doorstep across Bangladesh.",
+            iconName: "truck",
+            image: undefined,
+          },
+          {
+            title: "Secure Payment",
+            body: "Cash on delivery, bKash, Nagad, and secure card payment.",
+            iconName: "shield-check",
+            image: undefined,
+          },
+          {
+            title: "Guaranteed Quality",
+            body: "100% authentic curated products with easy customer support.",
+            iconName: "badge-check",
+            image: undefined,
+          },
+        ];
 
   const colClass =
     items.length === 1

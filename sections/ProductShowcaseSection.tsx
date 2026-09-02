@@ -41,7 +41,61 @@ export function ProductShowcaseSection({
     setSelectedColor(product?.colors?.[0]?.name);
   }, [product?.id, product?.sizes, product?.colors]);
 
-  if (!product) return null;
+  if (!product) {
+    return (
+      <section className="mx-auto max-w-[1280px] px-3 py-8 sm:px-4 sm:py-12">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_40px_-16px_rgba(15,23,42,0.18)] ring-1 ring-black/[0.04] select-none">
+          <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* Image stage */}
+            <div className="relative aspect-[4/5] bg-[var(--muted)] sm:aspect-square lg:aspect-auto lg:min-h-[520px]" />
+
+            {/* Content */}
+            <div className="flex flex-col justify-center gap-5 p-5 sm:gap-6 sm:p-8 lg:p-10">
+              <div className="space-y-2">
+                <div className="h-3 w-20 bg-[var(--muted)] rounded" />
+                <div className="h-8 sm:h-10 w-3/4 bg-[var(--muted)] rounded" />
+                <div className="h-4 w-1/2 bg-[var(--muted)] rounded" />
+              </div>
+
+              <div className="h-9 w-36 bg-[var(--muted)] rounded" />
+
+              {/* Colors Skeleton */}
+              <div>
+                <div className="h-3 w-16 bg-[var(--muted)] rounded mb-2.5" />
+                <div className="flex gap-2.5">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="size-9 rounded-full bg-[var(--muted)]"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Sizes Skeleton */}
+              <div>
+                <div className="h-3 w-14 bg-[var(--muted)] rounded mb-2" />
+                <div className="flex gap-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-10 w-12 rounded-[var(--theme-btn-radius)] bg-[var(--muted)]"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Buttons Skeleton */}
+              <div className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:items-stretch">
+                <div className="h-12 flex-1 rounded-[var(--theme-btn-radius)] bg-[var(--muted)]" />
+                <div className="h-12 flex-1 rounded-[var(--theme-btn-radius)] bg-[var(--muted)]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const image = product.images?.[0] ?? "";
   const needsSize = sizes.length > 0;

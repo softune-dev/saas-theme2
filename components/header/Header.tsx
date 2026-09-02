@@ -189,9 +189,9 @@ export function Header({
 
         <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
           <Link
-            href="/contact"
+            href="/login"
             className="hidden items-center gap-1.5 rounded-lg px-2.5 py-2 text-sm text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] sm:inline-flex"
-            aria-label="Account / support"
+            aria-label="Account"
           >
             <User className="size-4" />
           </Link>

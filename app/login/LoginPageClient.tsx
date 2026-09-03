@@ -2,7 +2,8 @@
 
 import React, { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { SiteLogo } from "@/components/brand/SiteLogo";
 import { Footer } from "@/components/footer/Footer";
 
 export function LoginPageClient() {
@@ -19,7 +20,8 @@ export function LoginPageClient() {
     <div className="flex min-h-screen flex-col bg-[var(--background)] text-[var(--foreground)]">
       <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col justify-center px-3 py-12 sm:px-4 sm:py-20">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-6 text-center">
+          <div className="mb-6 flex flex-col items-center text-center">
+            <SiteLogo className="mb-4" />
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
               Welcome back
             </p>
@@ -100,4 +102,3 @@ export function LoginPageClient() {
     </div>
   );
 }
-

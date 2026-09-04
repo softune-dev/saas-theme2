@@ -4,6 +4,40 @@ import { NextRequest, NextResponse } from "next/server";
  * the ?__site= query param) keep resolving to the same site. */
 const SITE_COOKIE = "__preview_site";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "http://localhost:8000";
+
+/**
+ * IP-block check, done HERE at the edge rather than inside lib/get-site.ts's
+ * page-level fetch, because that fetch is wrapped in Next.js's Data Cache
+ * (`next: { revalidate: 60 }`, see get-site.ts's own comment on why) — a
+ * cache hit reuses the SAME cached response for every visitor within that
+ * window regardless of their own IP, so a per-visitor block check bundled
+ * into that cached fetch simply doesn't reliably re-run. Edge middleware
+ * runs on every single request before any of that page-level caching, so
+ * it's the one place a check like this is guaranteed fresh every time.
+ *
+ * `cache: "no-store"` matters here too, separate from the above: fetch()
+ * calls from middleware aren't subject to Next's page Data Cache the same
+ * way, but being explicit costs nothing and documents the intent.
+ */
+async function checkIpBlocked(host: string, clientIp: string | undefined): Promise<boolean> {
+  if (!clientIp) return false;
+  try {
+    const res = await fetch(`${API_BASE_URL}/public/site/${host}`, {
+      method: "HEAD",
+      headers: { "X-Forwarded-For": clientIp },
+      cache: "no-store",
+    });
+    return res.status === 403;
+  } catch {
+    // Network error reaching our own backend — fail open, same discipline
+    // as the backend's own ip_block middleware. A check that can't be
+    // answered must never itself take the storefront down.
+    return false;
+  }
+}
+
 /**
  * Host alias for the dashboard's editor preview iframe, which loads this
  * app at its shared Vercel URL (e.g. saas-theme2.vercel.app) regardless of
@@ -34,7 +68,7 @@ const SITE_COOKIE = "__preview_site";
  * the real host, not the override. A custom header isn't reserved, so
  * Vercel leaves it alone.
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const paramSite = request.nextUrl.searchParams.get("__site");
   const cookieSite = request.cookies.get(SITE_COOKIE)?.value;
   const siteHost = paramSite || cookieSite || process.env.SITE_HOST;
@@ -53,6 +87,20 @@ export function middleware(request: NextRequest) {
   // the INBOUND request, before any of our own outbound hops.
   const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   if (clientIp) headers.set("x-real-client-ip", clientIp);
+
+  // /blocked itself must never be checked — this IS the page a blocked
+  // visitor is redirected to, checking it too would just loop forever.
+  if (!request.nextUrl.pathname.startsWith("/blocked")) {
+    const realHost = (
+      siteHost ||
+      request.headers.get("x-forwarded-host") ||
+      request.headers.get("host") ||
+      ""
+    ).split(":")[0];
+    if (realHost && (await checkIpBlocked(realHost, clientIp))) {
+      return NextResponse.rewrite(new URL("/blocked", request.url));
+    }
+  }
 
   if (!siteHost) return NextResponse.next({ request: { headers } });
 

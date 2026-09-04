@@ -20,13 +20,21 @@ const API_BASE_URL =
  * `cache: "no-store"` matters here too, separate from the above: fetch()
  * calls from middleware aren't subject to Next's page Data Cache the same
  * way, but being explicit costs nothing and documents the intent.
+ *
+ * Sends the real IP as X-Original-Client-IP, NOT X-Forwarded-For — confirmed
+ * empirically that the backend's own reverse proxy (Caddy) overwrites
+ * X-Forwarded-For with whatever it sees as the immediate connection peer
+ * (this Vercel function's own outbound IP, not the original visitor's),
+ * silently discarding any value set here. Caddy has no special handling for
+ * an arbitrary custom header name, so it passes through untouched — see
+ * app/main.py's ip_block middleware, which checks this header first.
  */
 async function checkIpBlocked(host: string, clientIp: string | undefined): Promise<boolean> {
   if (!clientIp) return false;
   try {
     const res = await fetch(`${API_BASE_URL}/public/site/${host}`, {
       method: "HEAD",
-      headers: { "X-Forwarded-For": clientIp },
+      headers: { "X-Original-Client-IP": clientIp },
       cache: "no-store",
     });
     return res.status === 403;

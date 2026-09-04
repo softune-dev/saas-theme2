@@ -47,13 +47,17 @@ export async function fetchSiteConfig(
   const host = providedHost || (await getSiteHost());
 
   // The real visitor IP (set by middleware.ts from the INBOUND request,
-  // before it's threaded here) — forwarded explicitly as X-Forwarded-For
+  // before it's threaded here) — forwarded explicitly as X-Original-Client-IP
   // on this OUTBOUND call, since this fetch() is a brand-new connection
   // from this app's own server and carries none of the original request's
   // networking context otherwise. Without this, app/main.py's ip_block
   // middleware never sees a blocked visitor's real IP for any
   // server-rendered page — only client-side calls (checkout) would
-  // actually be blocked.
+  // actually be blocked. NOT X-Forwarded-For: confirmed empirically that
+  // the backend's own reverse proxy (Caddy) overwrites that header with
+  // whatever it sees as the immediate connection peer (this server's own
+  // outbound IP, not the original visitor's) — a custom header name passes
+  // through untouched.
   const clientIp = (await headers()).get("x-real-client-ip");
 
   // redirect() throws a special NEXT_REDIRECT sentinel Next.js's own
@@ -64,7 +68,7 @@ export async function fetchSiteConfig(
   let res: Response;
   try {
     res = await fetch(`${API_BASE_URL}/public/site/${host}`, {
-      headers: clientIp ? { "X-Forwarded-For": clientIp } : undefined,
+      headers: clientIp ? { "X-Original-Client-IP": clientIp } : undefined,
       // A build-time static-generation call to a slow or unreachable
       // backend must fail fast, not hang — Vercel gives each page 60s
       // before retrying (3x) and failing the whole build, and an

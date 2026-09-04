@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { PublicSiteConfig, ResolvedPageSeo, Product, SiteEditorSettings } from "./theme-types";
 import { defaultSettings } from "./sample-data";
 import { getSiteCategories, getSiteProducts } from "./public-catalog";
@@ -46,8 +46,25 @@ export async function fetchSiteConfig(
 ): Promise<PublicSiteConfig | null> {
   const host = providedHost || (await getSiteHost());
 
+  // The real visitor IP (set by middleware.ts from the INBOUND request,
+  // before it's threaded here) — forwarded explicitly as X-Forwarded-For
+  // on this OUTBOUND call, since this fetch() is a brand-new connection
+  // from this app's own server and carries none of the original request's
+  // networking context otherwise. Without this, app/main.py's ip_block
+  // middleware never sees a blocked visitor's real IP for any
+  // server-rendered page — only client-side calls (checkout) would
+  // actually be blocked.
+  const clientIp = (await headers()).get("x-real-client-ip");
+
+  // redirect() throws a special NEXT_REDIRECT sentinel Next.js's own
+  // runtime relies on — it must propagate past this function untouched, so
+  // the network try/catch below only ever wraps the fetch itself, never a
+  // redirect() call, or our own catch would silently swallow it and break
+  // the redirect entirely.
+  let res: Response;
   try {
-    const res = await fetch(`${API_BASE_URL}/public/site/${host}`, {
+    res = await fetch(`${API_BASE_URL}/public/site/${host}`, {
+      headers: clientIp ? { "X-Forwarded-For": clientIp } : undefined,
       // A build-time static-generation call to a slow or unreachable
       // backend must fail fast, not hang — Vercel gives each page 60s
       // before retrying (3x) and failing the whole build, and an
@@ -57,11 +74,23 @@ export async function fetchSiteConfig(
         ? { cache: "no-store" as const }
         : { next: { revalidate: 60, tags: [`site-${host}`] } }),
     });
-    if (!res.ok) return null;
-    return (await res.json()) as PublicSiteConfig;
   } catch {
     return null;
   }
+
+  if (res.status === 403) {
+    const body = await res.json().catch(() => null);
+    if (body?.detail?.code === "ip_blocked") {
+      // redirect() works from anywhere — including the root layout,
+      // unlike notFound() (see getSiteConfig's own comment below on that
+      // restriction) — so this one check covers every page and the
+      // layout in one place.
+      redirect("/blocked");
+    }
+  }
+
+  if (!res.ok) return null;
+  return (await res.json()) as PublicSiteConfig;
 }
 
 /** Same fetch, but calls notFound() instead of returning null — see

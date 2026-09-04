@@ -38,9 +38,24 @@ export function middleware(request: NextRequest) {
   const paramSite = request.nextUrl.searchParams.get("__site");
   const cookieSite = request.cookies.get(SITE_COOKIE)?.value;
   const siteHost = paramSite || cookieSite || process.env.SITE_HOST;
-  if (!siteHost) return NextResponse.next();
 
   const headers = new Headers(request.headers);
+  // The real visitor IP, threaded through as a custom header so
+  // lib/get-site.ts's server-side fetch to our own API can forward it as
+  // X-Forwarded-For — without this, a Server Component's OWN outbound
+  // fetch() call carries no trace of the original browser's IP at all (it's
+  // a brand-new connection from this app's server, not a proxied
+  // continuation of the inbound request), so the backend's IP-block
+  // middleware (app/main.py's ip_block) would only ever see client-side
+  // calls like checkout, never a page's own server-rendered data fetch —
+  // a blocked visitor could still browse every page, just not check out.
+  // x-forwarded-for here is trustworthy: this is edge middleware reading
+  // the INBOUND request, before any of our own outbound hops.
+  const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (clientIp) headers.set("x-real-client-ip", clientIp);
+
+  if (!siteHost) return NextResponse.next({ request: { headers } });
+
   headers.set("x-preview-site-host", siteHost);
 
   const response = NextResponse.next({ request: { headers } });

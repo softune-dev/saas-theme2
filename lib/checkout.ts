@@ -8,6 +8,7 @@
  * the number that actually gets charged.
  */
 
+import { getOrCreateDeviceId } from "./device";
 import { getRecaptchaToken, throwForErrorResponse } from "./recaptcha";
 
 const API_BASE_URL =
@@ -69,10 +70,11 @@ export async function submitOrder(
   recaptcha_v2_token: string = "",
 ): Promise<PublicOrderOut> {
   const recaptcha_token = await getRecaptchaToken("checkout");
+  const device_id = getOrCreateDeviceId();
   const res = await fetch(`${API_BASE_URL}/public/site/${host}/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...payload, recaptcha_token, recaptcha_v2_token }),
+    body: JSON.stringify({ ...payload, device_id, recaptcha_token, recaptcha_v2_token }),
   });
   if (!res.ok) {
     await throwForErrorResponse(res, "Couldn't place your order. Please try again.");

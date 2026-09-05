@@ -98,7 +98,7 @@ export function CategoriesSection({
                   {/* Separate image card container */}
                   <div
                     className={[
-                      "relative flex aspect-square w-full items-center justify-center overflow-hidden bg-white border border-[var(--border)] rounded-full sm:rounded-2xl p-3 sm:p-4",
+                      "relative flex aspect-square w-full items-center justify-center overflow-hidden bg-white border border-[var(--border)] rounded-full sm:rounded-2xl",
                       "transition-all duration-300 ease-out shadow-[0_1px_3px_rgba(0,0,0,0.05)]",
                       "group-hover:border-[var(--brand)] group-hover:shadow-md",
                     ].join(" ")}
@@ -108,15 +108,17 @@ export function CategoriesSection({
                         src={cat.image}
                         alt={cat.name}
                         fill
-                        className="object-contain p-3 transition-transform duration-300 group-hover:scale-105 sm:p-4"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                         sizes="(max-width: 640px) 76px, 144px"
                       />
                     ) : (
-                      <FeatureIcon
-                        name={cat.icon || "package"}
-                        className="size-8 text-[var(--brand)] transition-transform duration-300 group-hover:scale-105 sm:size-10"
-                        strokeWidth={1.5}
-                      />
+                      <div className="flex size-full items-center justify-center p-3 sm:p-4">
+                        <FeatureIcon
+                          name={cat.icon || "package"}
+                          className="size-8 text-[var(--brand)] transition-transform duration-300 group-hover:scale-105 sm:size-10"
+                          strokeWidth={1.5}
+                        />
+                      </div>
                     )}
                   </div>
 

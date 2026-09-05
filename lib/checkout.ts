@@ -81,3 +81,29 @@ export async function submitOrder(
   }
   return res.json() as Promise<PublicOrderOut>;
 }
+
+/**
+ * Fire-and-forget: sent once the phone field passes validation, before the
+ * shopper submits the order — POST /public/site/{host}/checkout/abandoned
+ * (app/api/public.py's capture_abandoned_checkout). Lets a merchant see
+ * (and manually follow up with) shoppers who started checkout but never
+ * finished — no automated messaging, just visibility.
+ *
+ * Deliberately silent: this must never surface an error or slow down
+ * checkout. No recaptcha token either — this only ever sends a phone
+ * number and cart contents already visible in the shopper's own browser.
+ */
+export function captureAbandonedCheckout(
+  host: string,
+  phone: string,
+  items: PublicOrderItemIn[],
+): void {
+  fetch(`${API_BASE_URL}/public/site/${host}/checkout/abandoned`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, items }),
+    keepalive: true,
+  }).catch(() => {
+    /* best-effort — see docstring above */
+  });
+}

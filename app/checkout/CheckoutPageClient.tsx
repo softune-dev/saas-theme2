@@ -9,7 +9,7 @@ import { Check, Copy, Package } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import { formatTaka } from "@/lib/utils";
 import { Footer } from "@/components/footer/Footer";
-import { submitOrder, type PublicOrderOut } from "@/lib/checkout";
+import { captureAbandonedCheckout, submitOrder, type PublicOrderOut } from "@/lib/checkout";
 import { RecaptchaChallengeRequiredError, hasV2Fallback } from "@/lib/recaptcha";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/tracking";
 import { RecaptchaDisclosure } from "@/components/recaptcha-disclosure";
@@ -108,6 +108,27 @@ export function CheckoutPageClient({
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once on mount with a non-empty cart, not on every total/items identity change
   }, []);
+
+  // Abandoned-checkout capture: once the phone looks like a real BD mobile
+  // number, quietly tell the backend what's in the cart so this shows up in
+  // the merchant's abandoned-checkouts list if they never finish. Debounced
+  // so it doesn't fire on every keystroke while still typing.
+  const captureTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!isValidBdLocalPhone(form.phone) || items.length === 0) return;
+    if (captureTimer.current) clearTimeout(captureTimer.current);
+    captureTimer.current = setTimeout(() => {
+      captureAbandonedCheckout(
+        host,
+        `+880${form.phone.replace(/\D/g, "")}`,
+        items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
+      );
+    }, 800);
+    return () => {
+      if (captureTimer.current) clearTimeout(captureTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-fire on phone/cart changes, not host identity
+  }, [form.phone, items]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

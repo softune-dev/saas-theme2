@@ -44,13 +44,13 @@ export default async function CategoriesPage() {
                   "hover:shadow-[inset_0_0_0_1px_var(--brand)]",
                 ].join(" ")}
               >
-                <div className="relative flex min-h-0 flex-1 items-center justify-center">
+                <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
                   {cat.image ? (
                     <Image
                       src={cat.image}
                       alt={cat.name}
                       fill
-                      className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.03]"
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                       sizes="144px"
                     />
                   ) : (

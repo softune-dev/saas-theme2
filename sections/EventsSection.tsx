@@ -81,16 +81,10 @@ export function EventsSection({
       : [];
 
   const isSkeleton = selected.length === 0;
-  // 1 or 2 real events: each takes the full row instead of sharing it with
-  // an empty slot — only at 3 does the usual 3-column grid make sense.
-  const columnsClass =
-    selected.length === 1 || selected.length === 2
-      ? "grid-cols-1"
-      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-6 sm:px-4 sm:py-8">
-      <div className={`grid gap-4 ${columnsClass}`}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {isSkeleton
           ? Array.from({ length: MAX_EVENTS }).map((_, i) => (
               <SkeletonEventCard key={i} index={i + 1} />

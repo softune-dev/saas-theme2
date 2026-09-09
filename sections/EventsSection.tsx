@@ -22,19 +22,23 @@ function EventCard({ event }: { event: Event }) {
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
       ) : null}
-      {/* Gradient keeps left-aligned text legible over any photo. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      {/* Two gradients keep left-aligned text legible over any photo: one
+          fading in from the left toward the middle, one rising from the
+          bottom — together they cover the whole text block, not just a
+          bottom strip. */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/25 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-      <div className="relative flex flex-col items-start gap-1.5 p-4 text-left sm:p-5">
-        <h3 className="text-base font-bold tracking-tight text-white sm:text-lg">
+      <div className="relative flex flex-col items-start gap-2 p-4 text-left sm:p-6">
+        <h3 className="text-xl font-extrabold tracking-tight text-white sm:text-2xl md:text-3xl">
           {event.name}
         </h3>
         {event.description ? (
-          <p className="max-w-xs text-xs leading-relaxed text-white/85 line-clamp-1 sm:line-clamp-2">
+          <p className="max-w-sm text-sm leading-relaxed text-white/90 line-clamp-2">
             {event.description}
           </p>
         ) : null}
-        <span className="mt-1.5 inline-flex items-center justify-center rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-4 py-2 text-xs font-semibold text-white transition-opacity group-hover:opacity-90">
+        <span className="mt-1.5 inline-flex items-center justify-center rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-6 py-3 text-sm font-semibold text-white transition-opacity group-hover:opacity-90">
           {event.ctaLabel || "Shop now"}
         </span>
       </div>
@@ -77,10 +81,16 @@ export function EventsSection({
       : [];
 
   const isSkeleton = selected.length === 0;
+  // 1 or 2 real events: each takes the full row instead of sharing it with
+  // an empty slot — only at 3 does the usual 3-column grid make sense.
+  const columnsClass =
+    selected.length === 1 || selected.length === 2
+      ? "grid-cols-1"
+      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-6 sm:px-4 sm:py-8">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`grid gap-4 ${columnsClass}`}>
         {isSkeleton
           ? Array.from({ length: MAX_EVENTS }).map((_, i) => (
               <SkeletonEventCard key={i} index={i + 1} />

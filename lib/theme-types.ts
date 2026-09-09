@@ -88,7 +88,7 @@ export type SiteEditorSettings = {
    * real Events to show right under Hero. Curated only: an empty selection
    * means the section shows its own skeleton, never "show every event". */
   selectedEventIds: string[];
-  categoriesTitle: string; selectedCategoryIds: string[];
+  categoriesTitle: string; selectedCategoryIds: string[]; excludedCategoryIds?: string[];
   featureProductsTitle: string; selectedProductIds: string[];
   /** Product showcase — picks one catalog product; UI pulls name/price/image from it. */
   showcaseProductId: string;

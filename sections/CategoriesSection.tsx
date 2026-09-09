@@ -19,14 +19,23 @@ export function CategoriesSection({
   categories: ProductCategory[];
 }) {
   const { settings } = useTheme();
+  // Opt-out model: every real category shows by default, including ones
+  // added to the catalog after this section was last touched in the editor
+  // — only excludedCategoryIds hides one. selectedCategoryIds is the older
+  // opt-in list from before this existed; sites that never touched the new
+  // field still resolve against it here so an already-published curated
+  // list keeps rendering exactly as before.
+  const excludedIds = settings.excludedCategoryIds;
   const selectedIds = settings.selectedCategoryIds ?? [];
-  // Resolve selection against the real catalog. Empty selection (or stale
-  // ids that match nothing) → show all real categories — never sample-data.
-  const fromSettings =
-    selectedIds.length > 0
-      ? allCategories.filter((c) => selectedIds.includes(c.id))
-      : [];
-  const cats = fromSettings.length > 0 ? fromSettings : allCategories;
+  let cats: ProductCategory[];
+  if (excludedIds) {
+    cats = allCategories.filter((c) => !excludedIds.includes(c.id));
+  } else if (selectedIds.length > 0) {
+    const fromSettings = allCategories.filter((c) => selectedIds.includes(c.id));
+    cats = fromSettings.length > 0 ? fromSettings : allCategories;
+  } else {
+    cats = allCategories;
+  }
 
   const isSkeleton = cats.length === 0;
 

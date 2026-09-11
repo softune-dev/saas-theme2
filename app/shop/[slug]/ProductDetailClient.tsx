@@ -6,18 +6,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, Star, Truck } from "lucide-react";
-import { DynamicIcon, type IconName } from "lucide-react/dynamic";
 import type { Product } from "@/lib/theme-types";
 import { formatTaka, calculateDiscount } from "@/lib/utils";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { useCart } from "@/components/cart/CartContext";
 import { Footer } from "@/components/footer/Footer";
+import { FeatureIcon } from "@/lib/icon-map";
 import { trackAddToCart, trackViewContent } from "@/lib/tracking";
 
 // Neutral fallback for a feature added before icon-picking existed (or left
 // unset) — never a guess derived from the title text.
-const DEFAULT_FEATURE_ICON: IconName = "star";
+const DEFAULT_FEATURE_ICON = "star";
 
 /**
  * Marketplace PDP: gallery + buy panel, features, details, related.
@@ -429,10 +429,10 @@ export function ProductDetailClient({
           {features.length > 0 ? (
             <div className="grid gap-8 text-left sm:grid-cols-3 sm:gap-10">
               {features.map((feature, i) => {
-                const iconName = (feature.icon as IconName) || DEFAULT_FEATURE_ICON;
+                const iconName = feature.icon || DEFAULT_FEATURE_ICON;
                 return (
                   <div key={i} className="space-y-2.5">
-                    <DynamicIcon
+                    <FeatureIcon
                       name={iconName}
                       strokeWidth={1.5}
                       className="size-6 text-[var(--brand)]"

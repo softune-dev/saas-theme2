@@ -177,10 +177,17 @@ export type Product = {
   sizes?: string[];
   /** Merchant's variant type label for sizes (e.g. "Size"). */
   sizeLabel?: string;
+  /** Same values as `sizes`, but carrying each value's own image/price
+   * override when the merchant set one (dashboard's variant editor) — kept
+   * separate from `sizes` (a plain string list) since most call sites only
+   * ever need the label. image, when set, swaps the main product photo;
+   * priceDeltaCents, when set, is added to the base price. */
+  sizeDetails?: { value: string; image?: string; priceDeltaCents?: number }[];
   /** hex is a real merchant-picked color when present; only falls back to a
    * name-based guess for products saved before that existed. image, when
-   * set, swaps the main product photo when this color is selected. */
-  colors?: { name: string; hex: string; image?: string }[];
+   * set, swaps the main product photo when this color is selected.
+   * priceDeltaCents, when set, is added to the base price. */
+  colors?: { name: string; hex: string; image?: string; priceDeltaCents?: number }[];
   /** Merchant's variant type label for colors (e.g. "Color"). */
   colorLabel?: string;
   /** True = no delivery charge for this product, ever. False + empty

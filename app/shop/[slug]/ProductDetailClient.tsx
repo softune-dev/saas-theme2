@@ -45,17 +45,32 @@ export function ProductDetailClient({
   const [selectedColor, setSelectedColor] = useState<string | undefined>(
     product.colors?.[0]?.name,
   );
-  // A color value with its own photo (dashboard variant image) overrides the
-  // main stage — set only on an explicit swatch click, cleared the moment a
-  // gallery thumbnail (or a color with no photo) is picked.
+  // A color/size value with its own photo (dashboard variant editor)
+  // overrides the main stage — set only on an explicit selection, cleared
+  // the moment a gallery thumbnail (or a value with no photo) is picked.
   const [colorImage, setColorImage] = useState<string | null>(null);
+  const [sizeImage, setSizeImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+
+  // Size/color values can each carry their own price override (dashboard's
+  // "affects price" variant toggle) — both are added on top of the base
+  // price, same as the real order total the backend computes.
+  const selectedSizeDetail = product.sizeDetails?.find(
+    (d) => d.value === selectedSize,
+  );
+  const selectedColorDetail = product.colors?.find(
+    (c) => c.name === selectedColor,
+  );
+  const variantDeltaCents =
+    (selectedSizeDetail?.priceDeltaCents ?? 0) +
+    (selectedColorDetail?.priceDeltaCents ?? 0);
+  const displayPrice = product.price + variantDeltaCents / 100;
 
   const discount =
     product.discountPercent ??
     calculateDiscount(product.price, product.originalPrice);
   const hasCompare =
-    !!product.originalPrice && product.originalPrice > product.price;
+    !!product.originalPrice && product.originalPrice > displayPrice;
   const availableSizes = product.sizes?.length ? product.sizes : [];
   const features = product.features ?? [];
   const related = relatedProducts
@@ -123,9 +138,9 @@ export function ProductDetailClient({
             transition={{ duration: 0.4 }}
             className="relative aspect-square overflow-hidden rounded-2xl bg-white"
           >
-            {colorImage || product.images[activeImage] || product.images[0] ? (
+            {colorImage || sizeImage || product.images[activeImage] || product.images[0] ? (
               <Image
-                src={colorImage || product.images[activeImage] || product.images[0]}
+                src={colorImage || sizeImage || product.images[activeImage] || product.images[0]}
                 alt={product.name}
                 fill
                 priority
@@ -149,6 +164,7 @@ export function ProductDetailClient({
                   onClick={() => {
                     setActiveImage(idx);
                     setColorImage(null);
+                    setSizeImage(null);
                   }}
                   className={[
                     "relative size-16 shrink-0 overflow-hidden rounded-xl border-2 bg-white sm:size-[4.5rem]",
@@ -230,7 +246,7 @@ export function ProductDetailClient({
 
             <div className="flex flex-wrap items-baseline gap-2.5">
               <span className="text-3xl font-extrabold tabular-nums tracking-tight text-[var(--foreground)]">
-                {formatTaka(product.price)}
+                {formatTaka(displayPrice)}
               </span>
               {hasCompare ? (
                 <span className="text-base tabular-nums text-[var(--muted-foreground)] line-through">
@@ -300,7 +316,11 @@ export function ProductDetailClient({
                   <button
                     key={s}
                     type="button"
-                    onClick={() => setSelectedSize(s)}
+                    onClick={() => {
+                      setSelectedSize(s);
+                      const detail = product.sizeDetails?.find((d) => d.value === s);
+                      setSizeImage(detail?.image || null);
+                    }}
                     className={[
                       "min-w-11 rounded-[var(--theme-btn-radius)] border px-3 py-2.5 text-sm font-semibold transition-colors",
                       selectedSize === s

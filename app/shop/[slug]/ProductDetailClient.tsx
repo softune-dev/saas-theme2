@@ -337,11 +337,11 @@ export function ProductDetailClient({
 
           <div className="space-y-2.5 pt-1">
             <div className="flex items-center gap-2.5">
-              <div className="inline-flex items-center overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--background)]">
+              <div className="inline-flex items-center overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white">
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="p-3 text-[var(--foreground)] transition-colors hover:bg-white"
+                  className="p-3 text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
                   aria-label="Decrease quantity"
                 >
                   <Minus className="size-3.5" strokeWidth={2} />
@@ -352,7 +352,7 @@ export function ProductDetailClient({
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => q + 1)}
-                  className="p-3 text-[var(--foreground)] transition-colors hover:bg-white"
+                  className="p-3 text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
                   aria-label="Increase quantity"
                 >
                   <Plus className="size-3.5" strokeWidth={2} />
@@ -363,7 +363,7 @@ export function ProductDetailClient({
                 type="button"
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--background)] px-3 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white px-3 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ShoppingBag className="size-4" strokeWidth={2} />
                 Add to cart

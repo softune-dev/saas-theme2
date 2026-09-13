@@ -67,7 +67,7 @@ export function EventPopupModal({ event }: { event: Event | null }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.98, y: 8 }}
             transition={{ type: "spring", damping: 26, stiffness: 300 }}
-            className="relative z-10 grid w-full max-w-3xl grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-2xl sm:grid-cols-2"
+            className="relative z-10 grid w-full max-w-xl grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-2xl sm:grid-cols-2"
           >
             <button
               type="button"

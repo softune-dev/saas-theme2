@@ -86,9 +86,9 @@ export function CategoriesSection({
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex shrink-0 flex-col items-center w-[5.5rem] sm:w-36 select-none"
+                  className="flex shrink-0 flex-col items-center w-[5.5rem] sm:w-44 select-none"
                 >
-                  <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-full border border-[var(--border)] bg-white sm:rounded-2xl p-3 text-center">
+                  <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-full border border-[var(--border)] bg-white p-3 text-center">
                     <div className="flex items-center justify-center text-[var(--muted-foreground)] sm:h-10 sm:w-10 sm:rounded-full sm:bg-[var(--muted)]">
                       <Plus className="size-7 sm:size-5" strokeWidth={2} />
                     </div>
@@ -102,12 +102,15 @@ export function CategoriesSection({
                 <Link
                   key={cat.id}
                   href={`/shop?category=${cat.slug}`}
-                  className="group flex shrink-0 flex-col items-center w-[5.5rem] sm:w-36 transition-transform duration-300 ease-out hover:-translate-y-1.5"
+                  // Desktop stays circular (not boxed) like mobile, just
+                  // bigger — sm:rounded-2xl used to square it off past the
+                  // sm breakpoint.
+                  className="group flex shrink-0 flex-col items-center w-[5.5rem] sm:w-44 transition-transform duration-300 ease-out hover:-translate-y-1.5"
                 >
                   {/* Separate image card container */}
                   <div
                     className={[
-                      "relative flex aspect-square w-full items-center justify-center overflow-hidden bg-white border border-[var(--border)] rounded-full sm:rounded-2xl",
+                      "relative flex aspect-square w-full items-center justify-center overflow-hidden bg-white border border-[var(--border)] rounded-full",
                       "transition-all duration-300 ease-out shadow-[0_1px_3px_rgba(0,0,0,0.05)]",
                       "group-hover:border-[var(--brand)] group-hover:shadow-md",
                     ].join(" ")}
@@ -118,7 +121,7 @@ export function CategoriesSection({
                         alt={cat.name}
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        sizes="(max-width: 640px) 76px, 144px"
+                        sizes="(max-width: 640px) 76px, 176px"
                       />
                     ) : (
                       <div className="flex size-full items-center justify-center p-3 sm:p-4">

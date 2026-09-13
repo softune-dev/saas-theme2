@@ -40,6 +40,7 @@ export function HeroSection({
   categories?: ProductCategory[];
 }) {
   const { settings } = useTheme();
+  const isVideo = settings.heroMediaType === "video";
   const wide = (settings.heroImages ?? []).filter(Boolean);
   const square = (settings.heroImagesSquare ?? []).filter(Boolean);
   // Hero images are merchant-owned theme fields — empty means no slides,
@@ -124,6 +125,31 @@ export function HeroSection({
           <HeroMarquee items={marqueeItems} divider={divider} />
 
           <div className="relative w-full overflow-hidden leading-none">
+            {isVideo ? (
+              <div className="relative aspect-square overflow-hidden bg-[var(--muted)] sm:aspect-video">
+                {settings.heroVideo ? (
+                  // eslint-disable-next-line jsx-a11y/media-has-caption
+                  <video
+                    src={settings.heroVideo}
+                    className="absolute inset-0 size-full object-cover"
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center select-none">
+                    <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-white text-[var(--foreground)] shadow-xs">
+                      <Plus className="size-7" strokeWidth={2} />
+                    </div>
+                    <span className="text-lg font-bold text-[var(--foreground)]">
+                      Add hero video
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
             {/* Mobile: 1:1 aspect crop or skeleton block with centered large + icon (no background circle) and 1:1 label */}
             <div className="relative aspect-square overflow-hidden bg-[var(--muted)] sm:hidden">
               {mobileSlides.length > 0 ? (
@@ -195,6 +221,8 @@ export function HeroSection({
                 </div>
               )}
             </div>
+              </>
+            )}
           </div>
         </div>
       </div>

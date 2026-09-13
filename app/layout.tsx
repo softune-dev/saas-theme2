@@ -37,8 +37,9 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { PreviewRouteBeacon } from "@/components/dev/PreviewRouteBeacon";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
 import { fetchSiteConfig, getPageSeo, getSiteHost, resolveTheme } from "@/lib/get-site";
-import { getSiteCategories } from "@/lib/public-catalog";
+import { getSiteCategories, getSiteEvents } from "@/lib/public-catalog";
 import { SiteUnavailable } from "@/components/ui/SiteUnavailable";
+import { EventPopupModal } from "@/components/product/EventPopupModal";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -303,6 +304,10 @@ export default async function RootLayout({
   const theme = resolveTheme(config);
   const rawSeo = config.site.seo ?? {};
   const categories = await getSiteCategories(host);
+  const events = await getSiteEvents(host);
+  // At most one true per site (migrations/062) — independent of whichever
+  // events the homepage Events section curates for itself.
+  const popupEvent = events.find((e) => e.isPopup) ?? null;
 
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
@@ -375,6 +380,7 @@ export default async function RootLayout({
               <Header categories={categories} />
               <main className="flex-1">{children}</main>
               <CartDrawer />
+              <EventPopupModal event={popupEvent} />
             </CartProvider>
           </ToastProvider>
         </ThemeProvider>

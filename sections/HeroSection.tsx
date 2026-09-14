@@ -198,7 +198,7 @@ export function HeroSection({
                       priority={i === 0}
                       sizes="(max-width: 1024px) 100vw, (max-width: 1280px) 70vw, 1024px"
                       className={[
-                        "object-contain object-top transition-opacity duration-700 ease-out",
+                        "object-cover object-center transition-opacity duration-700 ease-out",
                         i === desktopIndex ? "opacity-100" : "opacity-0",
                       ].join(" ")}
                     />

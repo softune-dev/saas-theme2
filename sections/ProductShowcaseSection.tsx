@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, ShoppingBag } from "lucide-react";
@@ -104,7 +103,7 @@ export function ProductShowcaseSection({
               </div>
 
               {/* Buttons Skeleton */}
-              <div className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:items-stretch">
+              <div className="flex flex-row gap-2.5 pt-1">
                 <div className="h-12 flex-1 rounded-[var(--theme-btn-radius)] bg-[var(--muted)]" />
                 <div className="h-12 flex-1 rounded-[var(--theme-btn-radius)] bg-[var(--muted)]" />
               </div>
@@ -125,17 +124,13 @@ export function ProductShowcaseSection({
     <section className="mx-auto max-w-[1280px] px-3 py-8 sm:px-4 sm:py-12">
       <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_40px_-16px_rgba(15,23,42,0.18)] ring-1 ring-black/[0.04]">
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          {/* Image stage */}
-          <div className="relative aspect-[4/5] bg-[var(--muted)] sm:aspect-square lg:aspect-auto lg:min-h-[520px]">
+          {/* Image stage — no forced aspect ratio/crop/padding, so it
+              renders at the uploaded image's own natural proportions
+              instead of leaving letterbox gaps around it. */}
+          <div className="relative bg-[var(--muted)]">
             {image ? (
-              <Image
-                src={image}
-                alt={product.name}
-                fill
-                priority
-                className="object-contain p-6 sm:p-10"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={image} alt={product.name} className="block h-auto w-full" />
             ) : null}
             {discountPercent > 0 ? (
               <span className="absolute top-4 left-4 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
@@ -249,17 +244,17 @@ export function ProductShowcaseSection({
             ) : null}
 
             {/* Action buttons */}
-            <div className="flex flex-col gap-2.5 pt-1 sm:flex-row sm:items-stretch">
+            <div className="flex flex-row gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => {
                   addItem(product, 1, selectedSize, selectedColor);
                   openDrawer();
                 }}
-                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-6 text-sm font-bold text-[var(--brand-fg)] transition-opacity hover:opacity-90"
+                className="inline-flex h-12 flex-1 items-center justify-center gap-1.5 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] px-2 text-xs font-bold text-[var(--brand-fg)] transition-opacity hover:opacity-90 sm:gap-2 sm:px-6 sm:text-sm"
               >
-                <ShoppingBag className="size-4" />
-                Add to Cart
+                <ShoppingBag className="size-4 shrink-0" />
+                <span className="truncate">Add to Cart</span>
               </button>
               <button
                 type="button"
@@ -267,7 +262,7 @@ export function ProductShowcaseSection({
                   addItem(product, 1, selectedSize, selectedColor);
                   router.push("/checkout");
                 }}
-                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border-2 border-[var(--foreground)] bg-white px-6 text-sm font-bold text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-white"
+                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border-2 border-[var(--foreground)] bg-white px-2 text-xs font-bold text-[var(--foreground)] transition-colors hover:bg-[var(--foreground)] hover:text-white sm:px-6 sm:text-sm"
               >
                 Buy Now
               </button>

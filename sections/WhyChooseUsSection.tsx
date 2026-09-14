@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Plus } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 
@@ -18,18 +17,15 @@ export function WhyChooseUsSection() {
     <section className="mx-auto max-w-[1280px] px-3 py-8 sm:px-4 sm:py-12">
       <div className="grid items-center gap-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-white lg:grid-cols-2">
         {/* Image side always shows the real upload the moment it exists,
-            independent of whether the points below are filled in yet. */}
-        <div className="relative aspect-[4/3] bg-[var(--muted)] lg:aspect-auto lg:min-h-[320px]">
+            independent of whether the points below are filled in yet. No
+            forced aspect ratio/crop on the real image — it renders at its
+            own natural proportions instead of being cropped to fit a box. */}
+        <div className="relative bg-[var(--muted)]">
           {hasImage ? (
-            <Image
-              src={settings.whyImage}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={settings.whyImage} alt="" className="block h-auto w-full" />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center select-none">
+            <div className="flex aspect-[4/3] h-full w-full flex-col items-center justify-center p-6 text-center select-none lg:aspect-auto lg:min-h-[320px]">
               {/* Mobile: centered larger + icon without background circle */}
               <div className="flex flex-col items-center justify-center sm:hidden">
                 <Plus className="mb-2 size-9 text-[var(--foreground)]" strokeWidth={2} />

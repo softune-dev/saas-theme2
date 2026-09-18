@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Eye, ShoppingBag } from "lucide-react";
 import type { Product } from "@/lib/theme-types";
 import { formatTaka } from "@/lib/utils";
@@ -22,6 +22,22 @@ export function ProductCard({ product }: { product: Product }) {
   const { addItem, openDrawer } = useCart();
   const router = useRouter();
   const [quickView, setQuickView] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
+  const images = product.images.filter(Boolean);
+
+  useEffect(() => {
+    if (!hovered || images.length < 2) {
+      if (!hovered) setImageIndex(0);
+      return;
+    }
+    const id = window.setInterval(() => {
+      setImageIndex((i) => (i + 1) % images.length);
+    }, 1800);
+    return () => window.clearInterval(id);
+  }, [hovered, images.length]);
+
+  const shownImage = images[imageIndex] ?? images[0];
   const hasCompare =
     !!product.originalPrice && product.originalPrice > product.price;
   const discount =
@@ -45,14 +61,18 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <>
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-shadow duration-300 hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]">
+    <article
+      className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-shadow duration-300 hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <Link
         href={`/shop/${product.slug}`}
         className="relative block aspect-square overflow-hidden rounded-t-xl bg-[var(--muted)]"
       >
-        {product.images[0] ? (
+        {shownImage ? (
           <Image
-            src={product.images[0]}
+            src={shownImage}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"

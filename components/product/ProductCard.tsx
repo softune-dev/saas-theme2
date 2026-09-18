@@ -45,51 +45,49 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <>
     <article className="group flex h-full flex-col overflow-hidden rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow duration-300 hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]">
-      <div className="p-2">
-        <Link
-          href={`/shop/${product.slug}`}
-          className="relative block aspect-square overflow-hidden rounded-md bg-[var(--muted)]"
+      <Link
+        href={`/shop/${product.slug}`}
+        className="relative block aspect-square overflow-hidden bg-[var(--muted)]"
+      >
+        {product.images[0] ? (
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center text-xs text-[var(--muted-foreground)]">
+            No image
+          </div>
+        )}
+
+        {discount && discount > 0 ? (
+          <span className="absolute left-2 top-2 rounded-md bg-[var(--brand)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[var(--brand-fg)] shadow-sm sm:text-[11px]">
+            -{discount}%
+          </span>
+        ) : null}
+
+        {product.badge ? (
+          <span className="absolute right-2 top-2 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-semibold text-[var(--foreground)] shadow-sm ring-1 ring-black/5 sm:text-[11px]">
+            {product.badge}
+          </span>
+        ) : null}
+
+        <button
+          type="button"
+          aria-label={`Quick view ${product.name}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setQuickView(true);
+          }}
+          className="absolute bottom-2 right-2 inline-flex size-8 items-center justify-center rounded-full bg-white/95 text-[var(--foreground)] opacity-0 shadow-sm ring-1 ring-black/5 transition-opacity group-hover:opacity-100 max-md:opacity-100"
         >
-          {product.images[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center text-xs text-[var(--muted-foreground)]">
-              No image
-            </div>
-          )}
-
-          {discount && discount > 0 ? (
-            <span className="absolute left-2 top-2 rounded-md bg-[var(--brand)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[var(--brand-fg)] shadow-sm sm:text-[11px]">
-              -{discount}%
-            </span>
-          ) : null}
-
-          {product.badge ? (
-            <span className="absolute right-2 top-2 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-semibold text-[var(--foreground)] shadow-sm ring-1 ring-black/5 sm:text-[11px]">
-              {product.badge}
-            </span>
-          ) : null}
-
-          <button
-            type="button"
-            aria-label={`Quick view ${product.name}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setQuickView(true);
-            }}
-            className="absolute bottom-2 right-2 inline-flex size-8 items-center justify-center rounded-full bg-white/95 text-[var(--foreground)] opacity-0 shadow-sm ring-1 ring-black/5 transition-opacity group-hover:opacity-100 max-md:opacity-100"
-          >
-            <Eye className="size-4" strokeWidth={2} />
-          </button>
-        </Link>
-      </div>
+          <Eye className="size-4" strokeWidth={2} />
+        </button>
+      </Link>
 
       <div className="flex flex-1 flex-col gap-2.5 px-3 pb-3">
         {product.categoryName ? (

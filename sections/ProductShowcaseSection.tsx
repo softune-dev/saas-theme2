@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, ShoppingBag } from "lucide-react";
+import { ArrowRight, Plus, ShoppingBag } from "lucide-react";
 import type { Product } from "@/lib/theme-types";
 import { calculateDiscount, formatTaka } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
@@ -119,50 +119,64 @@ export function ProductShowcaseSection({
     product.price,
     product.originalPrice,
   );
+  const hasHtmlDescription = product.description?.includes("<") ?? false;
 
   return (
     <section className="mx-auto max-w-[1280px] px-3 py-8 sm:px-4 sm:py-12">
       <div className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_40px_-16px_rgba(15,23,42,0.18)] ring-1 ring-black/[0.04]">
         <div className="grid grid-cols-1 lg:grid-cols-2">
-          {/* Image stage — no forced aspect ratio/crop/padding, so it
-              renders at the uploaded image's own natural proportions
-              instead of leaving letterbox gaps around it. */}
-          <div className="relative bg-[var(--muted)]">
+          {/* Image stage — capped aspect ratio + object-cover so one
+              oversized upload can never blow out the whole section's
+              height (previously: natural image size, no cap). */}
+          <Link
+            href={`/shop/${product.slug}`}
+            className="relative block aspect-square w-full overflow-hidden bg-[var(--muted)] lg:aspect-auto lg:min-h-[440px]"
+          >
             {image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={image} alt={product.name} className="block h-auto w-full" />
+              <img
+                src={image}
+                alt={product.name}
+                className="absolute inset-0 size-full object-cover"
+              />
             ) : null}
             {discountPercent > 0 ? (
               <span className="absolute top-4 left-4 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
                 Save {discountPercent}%
               </span>
             ) : null}
-          </div>
+          </Link>
 
           {/* Product details & buy form */}
           <div className="flex flex-col justify-center gap-5 p-5 sm:gap-6 sm:p-8 lg:p-10">
             <div>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
-                  Featured Product
-                </p>
-                <Link
-                  href={`/shop/${product.slug}`}
-                  className="text-xs font-semibold text-[var(--brand)] hover:underline"
-                >
-                  View Details →
-                </Link>
-              </div>
+              <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand)]">
+                Featured Product
+              </p>
               <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-3xl">
-                <Link href={`/shop/${product.slug}`} className="hover:underline">
+                <Link href={`/shop/${product.slug}`} className="transition-colors hover:text-[var(--brand)]">
                   {product.name}
                 </Link>
               </h2>
               {product.description ? (
-                <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)] line-clamp-3">
-                  {product.description}
-                </p>
+                hasHtmlDescription ? (
+                  <div
+                    className="prose prose-sm mt-2 line-clamp-3 max-w-none text-sm leading-relaxed text-[var(--muted-foreground)] [&_p]:m-0"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
+                ) : (
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--muted-foreground)] line-clamp-3">
+                    {product.description}
+                  </p>
+                )
               ) : null}
+              <Link
+                href={`/shop/${product.slug}`}
+                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand)] transition-colors hover:text-[var(--foreground)]"
+              >
+                View details
+                <ArrowRight className="size-3.5" strokeWidth={2.25} />
+              </Link>
             </div>
 
             {/* Price block */}

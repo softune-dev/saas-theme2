@@ -12,10 +12,11 @@ import { QuickViewModal } from "./QuickViewModal";
 
 /**
  * Marketplace product card — image, title, price, then Order Now + cart
- * side by side (both brand fills). No fabricated ratings. The image sits
- * in its own small inset padding with its own rounded corners, filled
- * edge to edge (object-cover); the card itself stays thin-rounded and
- * flush, no wasted gap around it.
+ * side by side (both brand fills). No fabricated ratings. The card has its
+ * own border + shadow so it reads as a distinct surface against the page
+ * background; the image sits flush at the top with only its own rounded
+ * corners (matching the card's), then a clear gap separates it from the
+ * text block below.
  */
 export function ProductCard({ product }: { product: Product }) {
   const { addItem, openDrawer } = useCart();
@@ -44,10 +45,10 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <>
-    <article className="group flex h-full flex-col overflow-hidden rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow duration-300 hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)] transition-shadow duration-300 hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]">
       <Link
         href={`/shop/${product.slug}`}
-        className="relative block aspect-square overflow-hidden bg-[var(--muted)]"
+        className="relative block aspect-square overflow-hidden rounded-t-xl bg-[var(--muted)]"
       >
         {product.images[0] ? (
           <Image
@@ -89,7 +90,7 @@ export function ProductCard({ product }: { product: Product }) {
         </button>
       </Link>
 
-      <div className="flex flex-1 flex-col gap-2.5 px-3 pb-3">
+      <div className="flex flex-1 flex-col gap-2.5 px-3 pb-3 pt-3.5">
         {product.categoryName ? (
           <p className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)] sm:block">
             {product.categoryName}

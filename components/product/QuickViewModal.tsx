@@ -97,7 +97,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
           </div>
 
           {product.images.length > 1 ? (
-            <div className="mt-2 hidden gap-2 overflow-x-auto md:flex">
+            <div className="mt-2 flex gap-2 overflow-x-auto">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}

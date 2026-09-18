@@ -3,19 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
-import { ShoppingBag } from "lucide-react";
+import { useState, type MouseEvent } from "react";
+import { Eye, ShoppingBag } from "lucide-react";
 import type { Product } from "@/lib/theme-types";
 import { formatTaka } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
+import { QuickViewModal } from "./QuickViewModal";
 
 /**
  * Marketplace product card — image, title, price, then Order Now + cart
- * side by side (both brand fills). No fabricated ratings.
+ * side by side (both brand fills). No fabricated ratings. The image sits
+ * in its own small inset padding with its own rounded corners, filled
+ * edge to edge (object-cover); the card itself stays thin-rounded and
+ * flush, no wasted gap around it.
  */
 export function ProductCard({ product }: { product: Product }) {
   const { addItem, openDrawer } = useCart();
   const router = useRouter();
+  const [quickView, setQuickView] = useState(false);
   const hasCompare =
     !!product.originalPrice && product.originalPrice > product.price;
   const discount =
@@ -38,39 +43,55 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--brand)_28%,var(--border))] hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]">
-      <Link
-        href={`/shop/${product.slug}`}
-        className="relative block aspect-square overflow-hidden bg-[var(--muted)]"
-      >
-        {product.images[0] ? (
-          <Image
-            src={product.images[0]}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center text-xs text-[var(--muted-foreground)]">
-            No image
-          </div>
-        )}
+    <>
+    <article className="group flex h-full flex-col overflow-hidden rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow duration-300 hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.18)]">
+      <div className="p-2">
+        <Link
+          href={`/shop/${product.slug}`}
+          className="relative block aspect-square overflow-hidden rounded-md bg-[var(--muted)]"
+        >
+          {product.images[0] ? (
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center text-xs text-[var(--muted-foreground)]">
+              No image
+            </div>
+          )}
 
-        {discount && discount > 0 ? (
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-[var(--brand)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[var(--brand-fg)] shadow-sm sm:text-[11px]">
-            -{discount}%
-          </span>
-        ) : null}
+          {discount && discount > 0 ? (
+            <span className="absolute left-2 top-2 rounded-md bg-[var(--brand)] px-2 py-0.5 text-[10px] font-bold tracking-wide text-[var(--brand-fg)] shadow-sm sm:text-[11px]">
+              -{discount}%
+            </span>
+          ) : null}
 
-        {product.badge ? (
-          <span className="absolute right-2.5 top-2.5 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-semibold text-[var(--foreground)] shadow-sm ring-1 ring-black/5 sm:text-[11px]">
-            {product.badge}
-          </span>
-        ) : null}
-      </Link>
+          {product.badge ? (
+            <span className="absolute right-2 top-2 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-semibold text-[var(--foreground)] shadow-sm ring-1 ring-black/5 sm:text-[11px]">
+              {product.badge}
+            </span>
+          ) : null}
 
-      <div className="flex flex-1 flex-col gap-2.5 p-3 sm:p-3.5">
+          <button
+            type="button"
+            aria-label={`Quick view ${product.name}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setQuickView(true);
+            }}
+            className="absolute bottom-2 right-2 inline-flex size-8 items-center justify-center rounded-full bg-white/95 text-[var(--foreground)] opacity-0 shadow-sm ring-1 ring-black/5 transition-opacity group-hover:opacity-100 max-md:opacity-100"
+          >
+            <Eye className="size-4" strokeWidth={2} />
+          </button>
+        </Link>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2.5 px-3 pb-3">
         {product.categoryName ? (
           <p className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)] sm:block">
             {product.categoryName}
@@ -114,5 +135,11 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
     </article>
+    <QuickViewModal
+      product={quickView ? product : null}
+      isOpen={quickView}
+      onClose={() => setQuickView(false)}
+    />
+    </>
   );
 }

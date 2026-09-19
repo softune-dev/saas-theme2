@@ -20,6 +20,7 @@ import {
   type RecaptchaV2FallbackHandle,
 } from "@/components/recaptcha-v2-fallback";
 import type { PublicPaymentMethod } from "@/lib/theme-types";
+import { resolveVariantCombination } from "@/lib/variant-combo";
 
 // Only the local part after the fixed "+880" prefix — 10 digits, starting
 // 3-9 per the real BD mobile prefixes. Mirrors app/api/public.py's
@@ -140,7 +141,11 @@ export function CheckoutPageClient({
     setError(null);
     try {
       const placed = await submitOrder(host, {
-        items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
+        items: items.map((i) => ({
+          product_id: i.product.id,
+          quantity: i.quantity,
+          variant_key: resolveVariantCombination(i.product, i.selectedSize, i.selectedColor)?.key,
+        })),
         customer: {
           first_name: form.firstName,
           last_name: form.lastName,

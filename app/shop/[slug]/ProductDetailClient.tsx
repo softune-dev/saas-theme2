@@ -14,6 +14,7 @@ import { useCart } from "@/components/cart/CartContext";
 import { Footer } from "@/components/footer/Footer";
 import { FeatureIcon } from "@/lib/icon-map";
 import { trackAddToCart, trackViewContent } from "@/lib/tracking";
+import { resolveVariantCombination } from "@/lib/variant-combo";
 
 // Neutral fallback for a feature added before icon-picking existed (or left
 // unset) — never a guess derived from the title text.
@@ -52,9 +53,17 @@ export function ProductDetailClient({
   const [sizeImage, setSizeImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Size/color values can each carry their own price override (dashboard's
-  // "affects price" variant toggle) — both are added on top of the base
-  // price, same as the real order total the backend computes.
+  // A product with real combinations (dashboard's variant editor) prices,
+  // stocks, and photographs each Size×Color pair independently — resolve
+  // the customer's current pick to its one real combination and use ITS
+  // numbers, not the legacy per-value price-delta math below (which stays
+  // only for a product saved before combinations existed).
+  const resolvedCombo = resolveVariantCombination(
+    product,
+    selectedSize || undefined,
+    selectedColor,
+  );
+
   const selectedSizeDetail = product.sizeDetails?.find(
     (d) => d.value === selectedSize,
   );
@@ -64,13 +73,24 @@ export function ProductDetailClient({
   const variantDeltaCents =
     (selectedSizeDetail?.priceDeltaCents ?? 0) +
     (selectedColorDetail?.priceDeltaCents ?? 0);
-  const displayPrice = product.price + variantDeltaCents / 100;
+  const displayPrice = resolvedCombo
+    ? (resolvedCombo.priceCents ?? product.price * 100) / 100
+    : product.price + variantDeltaCents / 100;
+  const displayOriginalPrice = resolvedCombo
+    ? resolvedCombo.compareAtCents !== undefined
+      ? resolvedCombo.compareAtCents / 100
+      : undefined
+    : product.originalPrice;
+  const comboOutOfStock =
+    !!resolvedCombo && resolvedCombo.trackStock && resolvedCombo.stock <= 0;
+  const hasUnresolvedCombo =
+    (product.variantCombinations?.length ?? 0) > 0 && !resolvedCombo;
+  const outOfStock = resolvedCombo ? comboOutOfStock : !product.inStock;
 
   const discount =
     product.discountPercent ??
     calculateDiscount(product.price, product.originalPrice);
-  const hasCompare =
-    !!product.originalPrice && product.originalPrice > displayPrice;
+  const hasCompare = !!displayOriginalPrice && displayOriginalPrice > displayPrice;
   const availableSizes = product.sizes?.length ? product.sizes : [];
   const features = product.features ?? [];
   const related = relatedProducts
@@ -138,9 +158,9 @@ export function ProductDetailClient({
             transition={{ duration: 0.4 }}
             className="relative aspect-square overflow-hidden rounded-2xl bg-white"
           >
-            {colorImage || sizeImage || product.images[activeImage] || product.images[0] ? (
+            {resolvedCombo?.image || colorImage || sizeImage || product.images[activeImage] || product.images[0] ? (
               <Image
-                src={colorImage || sizeImage || product.images[activeImage] || product.images[0]}
+                src={resolvedCombo?.image || colorImage || sizeImage || product.images[activeImage] || product.images[0]}
                 alt={product.name}
                 fill
                 priority
@@ -198,10 +218,16 @@ export function ProductDetailClient({
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
                 {product.categoryName}
               </p>
-              {product.inStock ? (
+              {!outOfStock ? (
                 <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-100">
                   In stock
-                  {product.stockCount > 0 ? ` · ${product.stockCount}` : ""}
+                  {resolvedCombo
+                    ? resolvedCombo.trackStock && resolvedCombo.stock > 0
+                      ? ` · ${resolvedCombo.stock}`
+                      : ""
+                    : product.stockCount > 0
+                      ? ` · ${product.stockCount}`
+                      : ""}
                 </span>
               ) : (
                 <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-600 ring-1 ring-rose-100">
@@ -250,7 +276,7 @@ export function ProductDetailClient({
               </span>
               {hasCompare ? (
                 <span className="text-base tabular-nums text-[var(--muted-foreground)] line-through">
-                  {formatTaka(product.originalPrice!)}
+                  {formatTaka(displayOriginalPrice!)}
                 </span>
               ) : null}
               {discount > 0 ? (
@@ -362,7 +388,7 @@ export function ProductDetailClient({
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
+                disabled={outOfStock || hasUnresolvedCombo}
                 className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white px-3 text-sm font-bold text-[var(--foreground)] transition-colors hover:border-[var(--brand)] hover:text-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ShoppingBag className="size-4" strokeWidth={2} />
@@ -373,7 +399,7 @@ export function ProductDetailClient({
             <button
               type="button"
               onClick={handleBuyNow}
-              disabled={!product.inStock}
+              disabled={outOfStock || hasUnresolvedCombo}
               className="flex min-h-11 w-full items-center justify-center rounded-[var(--theme-btn-radius)] bg-[var(--brand)] text-sm font-bold text-[var(--brand-fg)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Buy now

@@ -87,9 +87,10 @@ export function ProductDetailClient({
     (product.variantCombinations?.length ?? 0) > 0 && !resolvedCombo;
   const outOfStock = resolvedCombo ? comboOutOfStock : !product.inStock;
 
-  const discount =
-    product.discountPercent ??
-    calculateDiscount(product.price, product.originalPrice);
+  const discount = resolvedCombo
+    ? calculateDiscount(displayPrice, displayOriginalPrice)
+    : product.discountPercent ??
+      calculateDiscount(product.price, product.originalPrice);
   const hasCompare = !!displayOriginalPrice && displayOriginalPrice > displayPrice;
   const availableSizes = product.sizes?.length ? product.sizes : [];
   const features = product.features ?? [];

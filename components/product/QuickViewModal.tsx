@@ -8,6 +8,7 @@ import type { Product } from "@/lib/theme-types";
 import { formatTaka } from "@/lib/utils";
 import { useCart } from "@/components/cart/CartContext";
 import { useToast } from "@/components/ui/Toast";
+import { resolveVariantCombination } from "@/lib/variant-combo";
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -22,8 +23,8 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   const { addItem } = useCart();
   const { showToast } = useToast();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string | undefined>(product?.sizes?.[0]);
-  const [selectedColor, setSelectedColor] = useState<string | undefined>(product?.colors?.[0]?.name);
+  const [selectedSize, setSelectedSize] = useState<string | undefined>(undefined);
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const [mounted, setMounted] = useState(false);
 
@@ -34,8 +35,8 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
   useEffect(() => {
     if (!isOpen || !product) return;
     setSelectedImage(0);
-    setSelectedSize(product.sizes?.[0]);
-    setSelectedColor(product.colors?.[0]?.name);
+    setSelectedSize(undefined);
+    setSelectedColor(undefined);
     setQuantity(1);
   }, [isOpen, product]);
 
@@ -50,9 +51,23 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
 
   if (!isOpen || !product || !mounted) return null;
 
-  const hasCompare = !!product.originalPrice && product.originalPrice > product.price;
+  const resolvedCombo = resolveVariantCombination(product, selectedSize, selectedColor);
+  const displayPrice = resolvedCombo
+    ? (resolvedCombo.priceCents ?? product.price * 100) / 100
+    : product.price;
+  const displayOriginalPrice = resolvedCombo
+    ? resolvedCombo.compareAtCents !== undefined
+      ? resolvedCombo.compareAtCents / 100
+      : undefined
+    : product.originalPrice;
+  const comboOutOfStock =
+    !!resolvedCombo && resolvedCombo.trackStock && resolvedCombo.stock <= 0;
+  const hasUnresolvedCombo =
+    (product.variantCombinations?.length ?? 0) > 0 && !resolvedCombo;
+
+  const hasCompare = !!displayOriginalPrice && displayOriginalPrice > displayPrice;
   const discount = hasCompare
-    ? Math.round((1 - product.price / product.originalPrice!) * 100)
+    ? Math.round((1 - displayPrice / displayOriginalPrice!) * 100)
     : undefined;
 
   function handleAddToCart() {
@@ -127,11 +142,11 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
 
             <div className="mb-3 flex items-baseline gap-2">
               <span className="text-xl font-extrabold tabular-nums tracking-tight text-[var(--foreground)]">
-                {formatTaka(product.price)}
+                {formatTaka(displayPrice)}
               </span>
               {hasCompare ? (
                 <span className="text-sm tabular-nums text-[var(--muted-foreground)] line-through">
-                  {formatTaka(product.originalPrice!)}
+                  {formatTaka(displayOriginalPrice!)}
                 </span>
               ) : null}
             </div>
@@ -222,10 +237,15 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
             <button
               type="button"
               onClick={handleAddToCart}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-semibold text-[var(--brand-fg)] transition-opacity hover:opacity-90"
+              disabled={comboOutOfStock || hasUnresolvedCombo}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-semibold text-[var(--brand-fg)] transition-opacity hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
             >
               <ShoppingBag className="size-4" strokeWidth={2} />
-              Add to Cart &bull; {formatTaka(product.price * quantity)}
+              {hasUnresolvedCombo
+                ? "Select an option"
+                : comboOutOfStock
+                  ? "Out of stock"
+                  : `Add to Cart • ${formatTaka(displayPrice * quantity)}`}
             </button>
           </div>
         </div>

@@ -483,7 +483,7 @@ export function ProductDetailClient({
               </h3>
               {product.description?.includes("<") ? (
                 <div
-                  className="prose prose-sm mt-4 max-w-3xl text-[var(--muted-foreground)] [&_a]:text-[var(--brand)] [&_a]:underline [&_img]:my-4 [&_img]:rounded-lg [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5"
+                  className="prose prose-sm mt-4 max-w-3xl text-[var(--muted-foreground)] [&_a]:text-[var(--brand)] [&_a]:underline [&_img]:my-4 [&_img]:rounded-lg [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_img[src*='s.w.org']]:my-0 [&_img[src*='s.w.org']]:mr-1.5 [&_img[src*='s.w.org']]:inline-block [&_img[src*='s.w.org']]:h-4 [&_img[src*='s.w.org']]:w-4 [&_img[src*='s.w.org']]:align-text-bottom [&_img[src*='s.w.org']]:rounded-none [&_li:has(p:empty)]:hidden"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (

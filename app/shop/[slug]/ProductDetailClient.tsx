@@ -148,7 +148,7 @@ export function ProductDetailClient({
         </nav>
       </div>
 
-      <section className="mx-auto mt-5 grid w-full max-w-[1280px] flex-1 gap-6 px-3 sm:px-4 md:mt-7 md:grid-cols-2 md:gap-10 lg:gap-12">
+      <section className="mx-auto mt-5 grid w-full max-w-[1280px] flex-1 grid-cols-1 gap-6 px-3 sm:px-4 md:mt-7 md:grid-cols-2 md:gap-10 lg:gap-12 [&>*]:min-w-0">
         {/* Gallery */}
         <div className="space-y-3">
           <motion.div
@@ -175,7 +175,7 @@ export function ProductDetailClient({
           </motion.div>
 
           {product.images.length > 1 ? (
-            <div className="flex gap-2 overflow-x-auto pb-0.5">
+            <div className="flex w-full max-w-full gap-2 overflow-x-auto pb-0.5">
               {product.images.map((img, idx) => (
                 <button
                   key={idx}

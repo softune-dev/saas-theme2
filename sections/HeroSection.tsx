@@ -47,6 +47,12 @@ export function HeroSection({
   // rendering clean skeleton blocks with + icon and aspect ratio labels.
   const desktopSlides = wide.length > 0 ? wide : [];
   const mobileSlides = square.length > 0 ? square : desktopSlides;
+  // No mobile (1:1) hero uploaded: small screens show the desktop image
+  // instead, at its own locked 16:9 shape, smaller. It is never cropped
+  // into a square. With a mobile image the frame stays 1:1.
+  // (The empty placeholder below stays square; it only appears with no images at all.)
+  const mobileAspect =
+    square.length > 0 || mobileSlides.length === 0 ? "aspect-square" : "aspect-video";
 
   const desktopIndex = useSlideIndex(desktopSlides.length);
   const mobileIndex = useSlideIndex(mobileSlides.length);
@@ -151,7 +157,7 @@ export function HeroSection({
             ) : (
               <>
             {/* Mobile: 1:1 aspect crop or skeleton block with centered large + icon (no background circle) and 1:1 label */}
-            <div className="relative aspect-square overflow-hidden bg-[var(--muted)] sm:hidden">
+            <div className={`relative ${mobileAspect} overflow-hidden bg-[var(--muted)] sm:hidden`}>
               {mobileSlides.length > 0 ? (
                 <>
                   {mobileSlides.map((src, i) => (

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Package } from "lucide-react";
+import { FreeDeliveryNote } from "@/components/cart/FreeDeliveryNote";
 import { useCart } from "@/components/cart/CartContext";
 import { formatTaka } from "@/lib/utils";
 import { Footer } from "@/components/footer/Footer";
@@ -357,7 +358,7 @@ export function CheckoutPageClient({
                       )
                       .reduce((sum, item) => {
                         const match = item.product.deliveryCharges.find((dc) => dc.name === loc);
-                        return sum + (match ? match.charge : 0);
+                        return sum + (match ? match.charge * item.quantity : 0);
                       }, 0);
                     return (
                       <label
@@ -493,6 +494,7 @@ export function CheckoutPageClient({
               <div className="flex justify-between">
                 <dt className="text-[var(--muted-foreground)]">Delivery</dt>
                 <dd className="tabular-nums font-medium">{formatTaka(deliveryFee)}</dd>
+                <FreeDeliveryNote className="col-span-full text-[var(--muted-foreground)]" />
               </div>
               <div className="flex justify-between border-t border-[var(--border)] pt-2 text-base">
                 <dt className="font-semibold">Total</dt>

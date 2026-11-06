@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatTaka } from "@/lib/utils";
+import { FreeDeliveryNote } from "./FreeDeliveryNote";
 
 export function CartDrawer() {
   const {
@@ -163,6 +164,7 @@ export function CartDrawer() {
                     {formatTaka(subtotal)}
                   </span>
                 </div>
+                <FreeDeliveryNote className="text-[var(--muted-foreground)]" />
                 <Link
                   href="/checkout"
                   onClick={closeDrawer}

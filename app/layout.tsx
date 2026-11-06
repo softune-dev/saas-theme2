@@ -378,7 +378,7 @@ export default async function RootLayout({
         </Suspense>
         <ThemeProvider initialSettings={theme}>
           <ToastProvider>
-            <CartProvider>
+            <CartProvider freeDeliveryThreshold={(config.site.free_delivery_over_cents ?? 0) / 100}>
               <Header categories={categories} />
               <main className="flex-1">{children}</main>
               <CartDrawer />

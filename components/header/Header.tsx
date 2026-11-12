@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { SiteLogo } from "@/components/brand/SiteLogo";
 import { useCart } from "@/components/cart/CartContext";
+import { SearchResults } from "./SearchResults";
 import { useTheme } from "@/lib/theme-context";
 import { FeatureIcon } from "@/lib/icon-map";
 import type { NavLink, ProductCategory } from "@/lib/theme-types";
@@ -121,6 +122,9 @@ export function Header({
   const { itemCount, subtotal, openDrawer } = useCart();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  // Live results under the search box: open while typing, closed on pick,
+  // submit, blur or Escape.
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
   const catsRef = useRef<HTMLDivElement>(null);
@@ -130,6 +134,7 @@ export function Header({
     const q = query.trim();
     router.push(q ? `/shop?q=${encodeURIComponent(q)}` : "/shop");
     setMobileOpen(false);
+    setSuggestOpen(false);
   };
 
   // Close category flyout on outside click / Escape
@@ -169,12 +174,19 @@ export function Header({
         {/* Desktop Search Bar */}
         <form
           onSubmit={onSearch}
-          className="mx-auto hidden min-w-0 max-w-xl flex-1 sm:flex"
+          className="relative mx-auto hidden min-w-0 max-w-xl flex-1 sm:flex"
         >
           <div className="flex w-full overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--muted)] focus-within:border-[var(--brand)]">
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSuggestOpen(true);
+              }}
+              onFocus={() => setSuggestOpen(true)}
+              onBlur={() => setSuggestOpen(false)}
+              onKeyDown={(e) => e.key === "Escape" && setSuggestOpen(false)}
+              autoComplete="off"
               placeholder="Search products, brands, categories…"
               className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-[var(--muted-foreground)]"
             />
@@ -186,6 +198,18 @@ export function Header({
               <Search className="size-4" strokeWidth={2.25} />
             </button>
           </div>
+          {suggestOpen ? (
+            <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-xl">
+              <SearchResults
+                query={query}
+                onPick={() => {
+                setSuggestOpen(false);
+                setQuery("");
+                setMobileOpen(false);
+                }}
+              />
+            </div>
+          ) : null}
         </form>
 
         <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -257,11 +281,18 @@ export function Header({
 
       {/* Mobile Search Bar Row (Under top bar on mobile screens ONLY) */}
       <div className="border-t border-[var(--border)] bg-white px-3 py-2 sm:hidden">
-        <form onSubmit={onSearch} className="flex min-w-0 flex-1">
+        <form onSubmit={onSearch} className="relative flex min-w-0 flex-1">
           <div className="flex w-full overflow-hidden rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-[var(--muted)] focus-within:border-[var(--brand)]">
             <input
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSuggestOpen(true);
+              }}
+              onFocus={() => setSuggestOpen(true)}
+              onBlur={() => setSuggestOpen(false)}
+              onKeyDown={(e) => e.key === "Escape" && setSuggestOpen(false)}
+              autoComplete="off"
               placeholder="Search products, brands, categories…"
               className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs outline-none placeholder:text-[var(--muted-foreground)]"
             />
@@ -273,6 +304,18 @@ export function Header({
               <Search className="size-3.5" strokeWidth={2.25} />
             </button>
           </div>
+          {suggestOpen ? (
+            <div className="absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-xl">
+              <SearchResults
+                query={query}
+                onPick={() => {
+                setSuggestOpen(false);
+                setQuery("");
+                setMobileOpen(false);
+                }}
+              />
+            </div>
+          ) : null}
         </form>
       </div>
 

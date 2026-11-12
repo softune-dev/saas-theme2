@@ -8,6 +8,7 @@ import { Filter, Plus, X } from "lucide-react";
 import type { Event, Product, ProductCategory } from "@/lib/theme-types";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Footer } from "@/components/footer/Footer";
+import { matchesSearch } from "@/lib/search";
 
 const PRICE_RANGES = [
   "All",
@@ -114,12 +115,8 @@ export function ShopPageClient({
       result = result.filter((p) => p.featured);
     }
     if (q) {
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.categoryName.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q),
-      );
+      // Every word must match, in any order (lib/search.ts).
+      result = result.filter((p) => matchesSearch(p, q));
     }
 
     if (selectedPrice === "Under ৳1,000") {

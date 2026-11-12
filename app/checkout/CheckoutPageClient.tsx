@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Package } from "lucide-react";
 import { FreeDeliveryNote } from "@/components/cart/FreeDeliveryNote";
 import { useCart } from "@/components/cart/CartContext";
 import { formatTaka } from "@/lib/utils";
@@ -356,9 +355,9 @@ export function CheckoutPageClient({
                           !item.product.freeDelivery &&
                           (item.product.deliveryCharges?.length ?? 0) > 0,
                       )
-                      .reduce((sum, item) => {
+                      .reduce((max, item) => {
                         const match = item.product.deliveryCharges.find((dc) => dc.name === loc);
-                        return sum + (match ? match.charge * item.quantity : 0);
+                        return match ? Math.max(max, match.charge) : max;
                       }, 0);
                     return (
                       <label
@@ -525,192 +524,120 @@ export function CheckoutPageClient({
       </div>
       <Footer />
 
-      {/* Marketplace success modal — card receipt (not Aurora's fashion ticket). */}
+      {/* Success Receipt Modal */}
       <AnimatePresence>
-        {order ? (
+        {order && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/55 backdrop-blur-[2px] print:hidden"
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs print:hidden"
               onClick={handleCloseReceipt}
             />
 
             <style>{`
-@media print {
-  body * { visibility: hidden; }
-  #bazaar-receipt, #bazaar-receipt * { visibility: visible; }
-  #bazaar-receipt {
-    position: absolute; left: 0; top: 0; margin: 0;
-    padding: 2rem; width: 100%; max-width: none;
-    box-shadow: none; border-radius: 0; background: white;
-  }
-  .print-hidden { display: none !important; }
-}
-`}</style>
+ @media print {
+ body * { visibility: hidden; }
+ #receipt, #receipt * { visibility: visible; }
+ #receipt { position: absolute; left: 0; top: 0; margin: 0; padding: 2rem; width: 100%; max-width: none; box-shadow: none; background: white; color: #1c1c1c; }
+ .print-hidden { display: none !important; }
+ }
+ `}</style>
 
             <motion.div
-              id="bazaar-receipt"
-              role="dialog"
-              aria-labelledby="order-success-title"
-              aria-modal="true"
-              initial={{ opacity: 0, scale: 0.96, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98, y: 10 }}
-              transition={{ type: "spring", damping: 24, stiffness: 280 }}
-              className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl bg-white text-[var(--foreground)] shadow-2xl ring-1 ring-black/5"
-              style={{ padding: "2rem" }}
+              id="receipt"
+              initial={{ y: "100%", opacity: 0, rotateX: 45 }}
+              animate={{ y: 0, opacity: 1, rotateX: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 100 }}
+              style={{ transformPerspective: 1000 }}
+              className="relative w-full max-w-sm bg-[#faf9f6] text-[#1c1c1c] p-8 shadow-2xl origin-bottom border border-stone-200"
             >
-              <div className="mb-6 text-center">
+              {/* Radial gradient zigzag top/bottom edges */}
+              <div className="absolute top-0 left-0 w-full h-2 bg-[radial-gradient(circle_at_50%_0,transparent_3px,#faf9f6_4px)] bg-[length:12px_100%] -translate-y-full" />
+              <div className="absolute bottom-0 left-0 w-full h-2 bg-[radial-gradient(circle_at_50%_100%,transparent_3px,#faf9f6_4px)] bg-[length:12px_100%] translate-y-full" />
+
+              <div className="text-center mb-6">
                 {logoUrl ? (
-                  <div className="relative mx-auto mb-3 h-8 w-28">
-                    <Image
-                      src={logoUrl}
-                      alt={siteName}
-                      fill
-                      className="object-contain"
-                    />
+                  <div className="relative w-28 h-8 mx-auto mb-2">
+                    <Image src={logoUrl} alt={siteName} fill className="object-contain" />
                   </div>
                 ) : (
                   <h3
-                    id="order-success-title"
-                    className="mb-1 font-display text-2xl font-bold tracking-tight"
+                    style={{ fontFamily: "var(--font-display)" }}
+                    className="font-display text-3xl mb-1 text-[#1c1c1c]"
                   >
                     {siteName}
                   </h3>
                 )}
-                <p
-                  id={logoUrl ? "order-success-title" : undefined}
-                  className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]"
-                >
-                  Order confirmed
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#1c1c1c]/60 font-semibold">Order Confirmed</p>
               </div>
 
-              <div className="mb-5 space-y-2 text-xs font-medium">
-                {(
-                  [
-                    [
-                      "Date",
-                      new Date(order.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }),
-                    ],
-                    ["Order", `#${order.order_number.replace(/^#/, "")}`],
-                    ["Payment", paymentLabel],
-                  ] as const
-                ).map(([label, value]) => (
-                  <div
-                    key={label}
-                    className="flex items-baseline gap-2 text-[var(--muted-foreground)]"
-                  >
-                    <span className="shrink-0">{label}</span>
-                    <span
-                      aria-hidden
-                      className="min-w-4 flex-1 border-b border-dashed border-[var(--border)]"
-                    />
-                    <span className="shrink-0 font-medium text-[var(--foreground)]">
-                      {value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mb-6 space-y-3 border-y border-dashed border-[var(--border)] py-5">
-                {order.items.map((line, idx) => {
-                  const cartMatch = items.find(
-                    (c) => c.product.name === line.name,
-                  );
-                  const image = cartMatch?.product.images?.[0];
-                  return (
-                    <div
-                      key={`${line.name}-${idx}`}
-                      className="flex items-center gap-3"
-                    >
-                      <div className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-[var(--muted)]">
-                        {image ? (
-                          <Image
-                            src={image}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="44px"
-                          />
-                        ) : (
-                          <span className="flex size-full items-center justify-center text-[var(--muted-foreground)]">
-                            <Package className="size-4" strokeWidth={1.5} />
-                          </span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate text-sm text-[var(--foreground)]">
-                          {line.quantity}× {line.name}
-                        </span>
-                        {line.event_name ? (
-                          <span className="block text-xs font-semibold text-[var(--brand)]">
-                            {line.event_name} — {line.event_discount_percent}% off
-                          </span>
-                        ) : null}
-                      </div>
-                      <span className="shrink-0 text-sm font-semibold tabular-nums">
-                        {formatTaka(line.total_cents / 100)}
-                      </span>
-                    </div>
-                  );
-                })}
-                <div className="flex items-baseline gap-2 pt-1 text-sm text-[var(--muted-foreground)]">
-                  <span className="shrink-0">Shipping</span>
-                  <span
-                    aria-hidden
-                    className="min-w-4 flex-1 border-b border-dashed border-[var(--border)]"
-                  />
-                  <span className="shrink-0 tabular-nums font-medium text-[var(--foreground)]">
-                    {order.shipping_cents > 0
-                      ? formatTaka(order.shipping_cents / 100)
-                      : "Free"}
-                  </span>
+              <div className="text-xs text-[#1c1c1c]/70 mb-6 space-y-1.5 font-medium tracking-wide">
+                <div className="flex justify-between">
+                  <span>Date:</span>
+                  <span>{new Date(order.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Order #:</span>
+                  <strong className="text-[#1c1c1c]">{order.order_number}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>Payment:</span>
+                  <span>{paymentLabel}</span>
                 </div>
               </div>
 
-              <div className="mb-6 flex items-end justify-between gap-3">
-                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                  Total
-                </span>
-                <span className="text-2xl font-extrabold tabular-nums tracking-tight text-[var(--brand)]">
+              <div className="space-y-4 text-sm mb-8 border-y border-dashed border-[#1c1c1c]/20 py-6 text-left">
+                {order.items.map((i, idx) => (
+                  <div key={`${i.name}-${idx}`} className="flex flex-col gap-0.5">
+                    <div className="flex justify-between gap-4">
+                      <span className="truncate text-stone-800">{i.quantity}x {i.name}</span>
+                      <span className="font-semibold text-stone-900">{formatTaka(i.total_cents / 100)}</span>
+                    </div>
+                    {i.event_name ? (
+                      <span className="text-[11px] uppercase tracking-wider text-[var(--brand)]">
+                        {i.event_name} — {i.event_discount_percent}% off
+                      </span>
+                    ) : null}
+                  </div>
+                ))}
+                <div className="flex justify-between gap-4 text-[#1c1c1c]/60 pt-2">
+                  <span>Shipping</span>
+                  <span>{order.shipping_cents > 0 ? formatTaka(order.shipping_cents / 100) : "Free"}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-end mb-8">
+                <span className="text-[11px] uppercase tracking-[0.2em] text-stone-700">Total</span>
+                <span
+                  style={{ fontFamily: "var(--font-display)" }}
+                  className="font-display text-2xl text-[#1c1c1c] font-bold"
+                >
                   {formatTaka(order.total_cents / 100)}
                 </span>
               </div>
 
-              <div className="print-hidden space-y-2.5 text-center">
-                <p className="mb-3 text-xs leading-relaxed text-[var(--muted-foreground)]">
-                  Thank you{form.firstName ? `, ${form.firstName}` : ""}.
-                  {form.city
-                    ? ` Your order will ship to ${form.city} shortly.`
-                    : " We\u2019ll confirm by phone shortly."}
+              <div className="text-center space-y-3 print-hidden">
+                <p className="text-xs text-[#1c1c1c]/60 leading-relaxed mb-4">
+                  Thank you for your purchase, {form.firstName}.<br />
+                  Your order will be shipped to {form.city} shortly.
                 </p>
                 <button
-                  type="button"
                   onClick={() => window.print()}
-                  className="w-full rounded-[var(--theme-btn-radius)] bg-[var(--brand)] py-3 text-sm font-bold text-[var(--brand-fg)] transition-opacity hover:opacity-90"
+                  className="w-full rounded-[var(--theme-btn-radius)] bg-[#1c1c1c] text-[#faf9f6] py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[#1c1c1c]/85 transition-colors font-semibold"
                 >
-                  Print receipt
+                  Download Receipt
                 </button>
                 <button
-                  type="button"
                   onClick={handleCloseReceipt}
-                  className="w-full rounded-[var(--theme-btn-radius)] border border-[var(--border)] py-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--muted)]"
+                  className="w-full rounded-[var(--theme-btn-radius)] border border-[#1c1c1c]/25 py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[#1c1c1c]/5 transition-colors font-semibold"
                 >
-                  Close
+                  Close Receipt
                 </button>
               </div>
             </motion.div>
           </div>
-        ) : null}
+        )}
       </AnimatePresence>
 
       {manualModalOpen && manualWallets.length > 1 && !activeManualWallet ? (

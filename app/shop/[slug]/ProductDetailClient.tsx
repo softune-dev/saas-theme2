@@ -458,26 +458,35 @@ export function ProductDetailClient({
       {(product.description ||
         product.longDescription ||
         features.length > 0) && (
-        <section className="mx-auto w-full max-w-[1280px] space-y-10 px-3 py-10 sm:px-4 md:space-y-12 md:py-14">
+        <section className="mx-auto w-full max-w-[1280px] space-y-6 px-3 py-8 sm:px-4 md:space-y-8 md:py-12">
           {features.length > 0 ? (
-            <div className="grid gap-8 text-left sm:grid-cols-3 sm:gap-10">
+            // Compact cards: icon in a tinted circle beside its title and text,
+            // so on a phone they read as a tidy list, not loose stacked lines.
+            <div className="grid gap-3 text-left sm:grid-cols-3 sm:gap-4">
               {features.map((feature, i) => {
                 const iconName = feature.icon || DEFAULT_FEATURE_ICON;
                 return (
-                  <div key={i} className="space-y-2.5">
-                    <FeatureIcon
-                      name={iconName}
-                      strokeWidth={1.5}
-                      className="size-6 text-[var(--brand)]"
-                    />
-                    <h4 className="text-sm font-bold text-[var(--foreground)]">
-                      {feature.title}
-                    </h4>
-                    {feature.description ? (
-                      <p className="text-sm leading-relaxed text-[var(--muted-foreground)]">
-                        {feature.description}
-                      </p>
-                    ) : null}
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-white p-4"
+                  >
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--brand)]/10">
+                      <FeatureIcon
+                        name={iconName}
+                        strokeWidth={1.75}
+                        className="size-5 text-[var(--brand)]"
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="text-sm font-bold text-[var(--foreground)]">
+                        {feature.title}
+                      </h4>
+                      {feature.description ? (
+                        <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--muted-foreground)]">
+                          {feature.description}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                 );
               })}
@@ -485,8 +494,8 @@ export function ProductDetailClient({
           ) : null}
 
           {product.description || product.longDescription ? (
-            <div className="space-y-4 text-left">
-              <h3 className="text-xl font-bold tracking-tight text-[var(--foreground)] sm:text-2xl">
+            <div className="rounded-2xl border border-[var(--border)] bg-white p-4 text-left sm:p-6">
+              <h3 className="text-lg font-bold tracking-tight text-[var(--foreground)] sm:text-xl">
                 Product details
               </h3>
               {product.description?.includes("<") ? (
@@ -495,7 +504,7 @@ export function ProductDetailClient({
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               ) : (
-                <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
+                <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-[var(--muted-foreground)]">
                   {product.longDescription || product.description}
                 </p>
               )}

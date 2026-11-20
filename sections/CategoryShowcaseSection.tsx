@@ -45,7 +45,7 @@ function CategoryProductSlider({
           {categoryProducts.map((product) => (
             <div
               key={product.id}
-              className="min-w-0 flex-[0_0_46%] sm:flex-[0_0_30%] lg:flex-[0_0_22%]"
+              className="min-w-0 flex-[0_0_calc(50%-6px)] sm:flex-[0_0_30%] lg:flex-[0_0_22%]"
             >
               <ProductCard product={product} />
             </div>
@@ -84,7 +84,7 @@ function SkeletonCategorySlider({ blockIdx }: { blockIdx: number }) {
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="min-w-0 flex-[0_0_46%] sm:flex-[0_0_30%] lg:flex-[0_0_22%]"
+              className="min-w-0 flex-[0_0_calc(50%-6px)] sm:flex-[0_0_30%] lg:flex-[0_0_22%]"
             >
               <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] select-none">
                 <div className="relative aspect-square overflow-hidden bg-[var(--muted)] flex flex-col items-center justify-center p-4 text-center">

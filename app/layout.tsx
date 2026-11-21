@@ -305,6 +305,8 @@ export default async function RootLayout({
 
   const theme = resolveTheme(config);
   const rawSeo = config.site.seo ?? {};
+  // Chat assistant script lives on the API, one copy for every theme.
+  const assistantApi = (process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || "").replace(/\/$/, "");
   const categories = await getSiteCategories(host);
   const events = await getSiteEvents(host);
   // At most one true per site (migrations/062) — independent of whichever
@@ -369,6 +371,17 @@ export default async function RootLayout({
               />
             </noscript>
           </>
+        ) : null}
+        {/* Chat assistant: one small script served by the API (the same file
+         * for every theme), loaded once the page is idle so it costs nothing
+         * at load. It draws nothing unless the merchant has it switched on. */}
+        {assistantApi ? (
+          <Script
+            src={`${assistantApi}/public/assistant/widget.js`}
+            data-host={host}
+            data-api={assistantApi}
+            strategy="lazyOnload"
+          />
         ) : null}
         <Suspense fallback={null}>
           <PreviewRouteBeacon />

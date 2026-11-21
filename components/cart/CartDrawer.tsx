@@ -7,6 +7,7 @@ import { Minus, Plus, X } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatTaka } from "@/lib/utils";
 import { FreeDeliveryNote } from "./FreeDeliveryNote";
+import { unitPrice } from "@/lib/pricing";
 
 export function CartDrawer() {
   const {
@@ -97,7 +98,7 @@ export function CartDrawer() {
                           {item.product.name}
                         </Link>
                         <p className="mt-0.5 text-sm font-semibold tabular-nums text-[var(--brand)]">
-                          {formatTaka(item.product.price)}
+                          {formatTaka(unitPrice(item.product, item.selectedSize, item.selectedColor))}
                         </p>
                         <div className="mt-2 flex items-center justify-between">
                           <div className="inline-flex items-center rounded-lg border border-[var(--border)]">

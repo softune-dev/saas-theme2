@@ -13,7 +13,7 @@ import { ProductReviews } from "@/components/product/ProductReviews";
 import { useCart } from "@/components/cart/CartContext";
 import { Footer } from "@/components/footer/Footer";
 import { FeatureIcon } from "@/lib/icon-map";
-import { trackAddToCart, trackViewContent } from "@/lib/tracking";
+import { trackViewContent } from "@/lib/tracking";
 import { resolveVariantCombination } from "@/lib/variant-combo";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -112,7 +112,6 @@ export function ProductDetailClient({
 
   const handleAddToCart = () => {
     addItem(product, quantity, selectedSize || undefined, selectedColor);
-    trackAddToCart({ id: product.id, name: product.name, price: product.price, quantity }, "BDT");
     openDrawer();
   };
 
@@ -120,7 +119,6 @@ export function ProductDetailClient({
     addItem(product, quantity, selectedSize || undefined, selectedColor, {
       openDrawer: false,
     });
-    trackAddToCart({ id: product.id, name: product.name, price: product.price, quantity }, "BDT");
     router.push("/checkout");
   };
 

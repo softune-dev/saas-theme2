@@ -36,6 +36,7 @@ import { Header } from "@/components/header/Header";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { PreviewRouteBeacon } from "@/components/dev/PreviewRouteBeacon";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
+import { PixelRouteTracker } from "@/components/analytics/PixelRouteTracker";
 import { fetchSiteConfig, getPageSeo, getSiteHost, resolveTheme } from "@/lib/get-site";
 import { getSiteCategories, getSiteEvents } from "@/lib/public-catalog";
 import { SiteUnavailable } from "@/components/ui/SiteUnavailable";
@@ -386,6 +387,7 @@ export default async function RootLayout({
         <Suspense fallback={null}>
           <PreviewRouteBeacon />
         </Suspense>
+        <PixelRouteTracker />
         <Suspense fallback={null}>
           <PageViewBeacon host={host} />
         </Suspense>

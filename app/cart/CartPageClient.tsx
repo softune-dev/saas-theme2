@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/components/cart/CartContext";
 import { formatTaka } from "@/lib/utils";
 import { Footer } from "@/components/footer/Footer";
+import { unitPrice } from "@/lib/pricing";
 
 export function CartPageClient() {
   const {
@@ -76,7 +77,7 @@ export function CartPageClient() {
                     </p>
                   ) : null}
                   <p className="mt-1 text-sm font-semibold tabular-nums text-[var(--brand)]">
-                    {formatTaka(item.product.price)}
+                    {formatTaka(unitPrice(item.product, item.selectedSize, item.selectedColor))}
                   </p>
                   <div className="mt-2 flex items-center gap-3">
                     <div className="inline-flex items-center rounded-lg border border-[var(--border)]">
@@ -131,7 +132,7 @@ export function CartPageClient() {
                   </div>
                 </div>
                 <p className="shrink-0 text-sm font-semibold tabular-nums text-[var(--foreground)]">
-                  {formatTaka(item.product.price * item.quantity)}
+                  {formatTaka(unitPrice(item.product, item.selectedSize, item.selectedColor) * item.quantity)}
                 </p>
               </li>
             ))}

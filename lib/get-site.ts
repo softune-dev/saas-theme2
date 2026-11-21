@@ -181,6 +181,16 @@ export function buildMetadata(seo: ResolvedPageSeo): Metadata {
   };
 }
 
+/** Structured data wants plain text; merchants write descriptions as HTML. */
+function plainText(html: string | undefined): string {
+  return (html || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function generateProductJsonLd(product: Product, host: string) {
   const baseUrl = `https://${host}`;
   return {
@@ -188,7 +198,7 @@ export function generateProductJsonLd(product: Product, host: string) {
     "@type": "Product",
     name: product.name,
     image: product.images,
-    description: product.description,
+    description: plainText(product.description) || undefined,
     sku: product.id,
     brand: { "@type": "Brand", name: defaultSettings.siteName },
     offers: {

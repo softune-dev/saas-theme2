@@ -15,6 +15,7 @@ import { Footer } from "@/components/footer/Footer";
 import { FeatureIcon } from "@/lib/icon-map";
 import { trackAddToCart, trackViewContent } from "@/lib/tracking";
 import { resolveVariantCombination } from "@/lib/variant-combo";
+import { whatsappLink } from "@/lib/whatsapp";
 
 // Neutral fallback for a feature added before icon-picking existed (or left
 // unset) — never a guess derived from the title text.
@@ -27,11 +28,15 @@ export function ProductDetailClient({
   initialProduct,
   relatedProducts,
   categorySlug = "",
+  whatsapp = "",
 }: {
   initialProduct: Product;
   relatedProducts: Product[];
   categorySlug?: string;
+  /** The store's own WhatsApp (or phone) from its contact details; empty hides the button. */
+  whatsapp?: string;
 }) {
+  const hasWhatsapp = !!whatsappLink(whatsapp);
   const product = initialProduct;
   const { addItem, openDrawer } = useCart();
   const router = useRouter();
@@ -120,15 +125,13 @@ export function ProductDetailClient({
   };
 
   const handleWhatsAppBuy = () => {
-    const phoneNumber = "8801700000000";
     const url = typeof window !== "undefined" ? window.location.href : "";
     const sizeLine = selectedSize ? `\nSize: ${selectedSize}` : "";
     const colorLine = selectedColor ? `\nColor: ${selectedColor}` : "";
     const message = `Hello, I'd like to order: *${product.name}*${sizeLine}${colorLine}\nQuantity: ${quantity}\nLink: ${url}`;
-    window.open(
-      `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`,
-      "_blank",
-    );
+    const whatsappUrl = whatsappLink(whatsapp, message);
+    if (!whatsappUrl) return;
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
@@ -412,7 +415,8 @@ export function ProductDetailClient({
               Buy now
             </button>
 
-            <button
+            {hasWhatsapp ? (
+              <button
               type="button"
               onClick={handleWhatsAppBuy}
               className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white text-sm font-semibold text-[var(--foreground)] transition-colors hover:border-[#25D366]/50 hover:bg-[#25D366]/5"
@@ -425,6 +429,7 @@ export function ProductDetailClient({
               />
               Order via WhatsApp
             </button>
+            ) : null}
           </div>
 
           {!product.freeDelivery && product.deliveryCharges.length > 0 ? (

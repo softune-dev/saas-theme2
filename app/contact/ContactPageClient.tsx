@@ -23,6 +23,7 @@ import {
   type RecaptchaV2FallbackHandle,
 } from "@/components/recaptcha-v2-fallback";
 import type { PublicSiteConfig } from "@/lib/theme-types";
+import { whatsappLink } from "@/lib/whatsapp";
 
 type Business = NonNullable<PublicSiteConfig["site"]["business"]>;
 
@@ -127,7 +128,7 @@ export function ContactPageClient({
           icon: MessageCircle,
           label: "WhatsApp",
           body: "Chat with us",
-          href: `https://wa.me/${business.whatsapp.replace(/[^0-9]/g, "")}`,
+          href: whatsappLink(business.whatsapp),
         }
       : null,
   ].filter(Boolean) as {

@@ -34,10 +34,11 @@ export default async function ProductDetailPage({ params }: Props) {
   // related-products filter below actually depend on `product`'s value, not
   // on fetch order. Firing them together instead of awaiting the product
   // first removes a real waterfall (was: 1 fetch, then 2 more after it).
-  const [product, allProducts, categories] = await Promise.all([
+  const [product, allProducts, categories, config] = await Promise.all([
     getSiteProduct(host, slug),
     getSiteProducts(host),
     getSiteCategories(host),
+    getSiteConfig(host),
   ]);
   if (!product) notFound();
 
@@ -58,6 +59,7 @@ export default async function ProductDetailPage({ params }: Props) {
         initialProduct={product}
         relatedProducts={related}
         categorySlug={categorySlug}
+        whatsapp={config.site.business?.whatsapp || config.site.business?.phone || ""}
       />
     </>
   );

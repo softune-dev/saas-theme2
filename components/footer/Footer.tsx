@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useTheme } from "@/lib/theme-context";
 import { SiteLogo } from "@/components/brand/SiteLogo";
+import { useBadge } from "@/lib/site-flags";
 
 export function Footer() {
   const { settings } = useTheme();
+  const badge = useBadge();
 
   return (
     <footer className="mt-auto border-t border-[var(--border)] bg-white">
@@ -90,6 +92,14 @@ export function Footer() {
 
       <div className="border-t border-[var(--border)] py-4 text-center text-xs text-[var(--muted-foreground)]">
         © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
+        {badge ? (
+          <>
+            {" "}
+            <a href="https://softunebd.com" target="_blank" rel="noopener" className="hover:text-[var(--brand)]">
+              Powered by SoftuneBD
+            </a>
+          </>
+        ) : null}
       </div>
     </footer>
   );

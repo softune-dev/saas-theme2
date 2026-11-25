@@ -25,6 +25,9 @@ export default async function CheckoutPage() {
       siteName={siteName}
       logoUrl={logoUrl}
       paymentMethods={config.site.payment_methods ?? []}
+      ordering={config.ordering === "whatsapp" ? "whatsapp" : "checkout"}
+      whatsapp={config.site.business?.whatsapp || config.site.business?.phone || ""}
+      phone={config.site.business?.phone || ""}
     />
   );
 }

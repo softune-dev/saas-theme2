@@ -30,6 +30,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-context";
+import { SiteFlagsProvider } from "@/lib/site-flags";
 import { CartProvider } from "@/components/cart/CartContext";
 import { ToastProvider } from "@/components/ui/Toast";
 import { Header } from "@/components/header/Header";
@@ -392,14 +393,16 @@ export default async function RootLayout({
           <PageViewBeacon host={host} />
         </Suspense>
         <ThemeProvider initialSettings={theme}>
-          <ToastProvider>
-            <CartProvider freeDeliveryThreshold={(config.site.free_delivery_over_cents ?? 0) / 100}>
-              <Header categories={categories} />
-              <main className="flex-1">{children}</main>
-              <CartDrawer />
-              <EventPopupModal event={popupEvent} />
-            </CartProvider>
-          </ToastProvider>
+          <SiteFlagsProvider badge={config.badge === true}>
+            <ToastProvider>
+              <CartProvider freeDeliveryThreshold={(config.site.free_delivery_over_cents ?? 0) / 100}>
+                <Header categories={categories} />
+                <main className="flex-1">{children}</main>
+                <CartDrawer />
+                <EventPopupModal event={popupEvent} />
+              </CartProvider>
+            </ToastProvider>
+          </SiteFlagsProvider>
         </ThemeProvider>
       </body>
     </html>

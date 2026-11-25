@@ -12,7 +12,8 @@ import { Footer } from "@/components/footer/Footer";
 import { ManualPaymentModal, type ManualWallet } from "@/components/checkout/ManualPaymentModal";
 import { NagadPaymentModal } from "@/components/checkout/NagadPaymentModal";
 import { captureAbandonedCheckout, submitOrder, type PublicOrderOut } from "@/lib/checkout";
-import { RecaptchaChallengeRequiredError, hasV2Fallback } from "@/lib/recaptcha";
+import { OrderLimitError, RecaptchaChallengeRequiredError, hasV2Fallback } from "@/lib/recaptcha";
+import { orderWhatsappMessage, whatsappLink } from "@/lib/whatsapp";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/tracking";
 import { RecaptchaDisclosure } from "@/components/recaptcha-disclosure";
 import {
@@ -54,6 +55,9 @@ export function CheckoutPageClient({
   siteName,
   logoUrl,
   paymentMethods,
+  ordering = "checkout",
+  whatsapp = "",
+  phone = "",
 }: {
   host: string;
   siteName: string;
@@ -62,6 +66,12 @@ export function CheckoutPageClient({
    * checkout can only render cod/manual today regardless of what's
    * connected (gateways have no live checkout flow yet). */
   paymentMethods: PublicPaymentMethod[];
+  /** Config's top-level `ordering`; missing means "checkout". "whatsapp"
+   * turns Place order into a prepared WhatsApp message instead. */
+  ordering?: "checkout" | "whatsapp";
+  /** The store's WhatsApp, falling back to its phone (as the product page does). */
+  whatsapp?: string;
+  phone?: string;
 }) {
   const router = useRouter();
   const {
@@ -91,6 +101,10 @@ export function CheckoutPageClient({
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsChallenge, setNeedsChallenge] = useState(false);
+  // Set when POST /orders answers 403 order_limit: the store hit its monthly
+  // limit even though config still said "checkout" (the POST is the authority).
+  // transactionId is kept when the shopper had already paid in the modal.
+  const [limit, setLimit] = useState<{ whatsapp: string | null; transactionId?: string } | null>(null);
   const [v2Token, setV2Token] = useState<string | null>(null);
   const v2Ref = useRef<RecaptchaV2FallbackHandle>(null);
   const [form, setForm] = useState({
@@ -103,6 +117,33 @@ export function CheckoutPageClient({
   });
 
   const total = subtotal + deliveryFee;
+
+  // WhatsApp ordering: the number from a limit response wins, else the
+  // store's own WhatsApp, else its phone.
+  const whatsappMode = ordering === "whatsapp";
+  const waMessage = orderWhatsappMessage({
+    storeName: siteName,
+    items: items.map((i) => ({
+      name: i.product.name,
+      variant: [i.selectedSize && `Size ${i.selectedSize}`, i.selectedColor && `Color ${i.selectedColor}`]
+        .filter(Boolean)
+        .join(", "),
+      quantity: i.quantity,
+      linePrice: formatTaka(unitPrice(i.product, i.selectedSize, i.selectedColor) * i.quantity),
+    })),
+    subtotal: formatTaka(subtotal),
+    delivery: formatTaka(deliveryFee),
+    deliveryLocation: selectedDeliveryLocation,
+    total: formatTaka(total),
+    customer: {
+      name: `${form.firstName} ${form.lastName}`.trim(),
+      phone: form.phone ? `+880${form.phone.replace(/\D/g, "")}` : "",
+      address: [form.address, form.city, form.zip].filter(Boolean).join(", "),
+    },
+    transactionId: limit?.transactionId,
+  });
+  const waUrl = whatsappLink(limit?.whatsapp || whatsapp || phone, waMessage);
+  const showWaStep = !!limit || (whatsappMode && !waUrl);
 
   // Fires once per real checkout view — see aurora's CheckoutPageClient for
   // the identical pattern this mirrors.
@@ -170,7 +211,13 @@ export function CheckoutPageClient({
         items: items.map((i) => ({ id: i.product.id, name: i.product.name, price: unitPrice(i.product, i.selectedSize, i.selectedColor), quantity: i.quantity })),
       });
     } catch (err) {
-      if (err instanceof RecaptchaChallengeRequiredError) {
+      if (err instanceof OrderLimitError) {
+        // Close any payment modal so the WhatsApp step behind it is visible.
+        setLimit({ whatsapp: err.whatsapp, transactionId: transactionIdValue });
+        setManualModalOpen(false);
+        setActiveManualWallet(null);
+        setNeedsChallenge(false);
+      } else if (err instanceof RecaptchaChallengeRequiredError) {
         setNeedsChallenge(true);
         setError(hasV2Fallback ? null : err.message);
       } else {
@@ -185,12 +232,20 @@ export function CheckoutPageClient({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (items.length === 0 || placing || !paymentMethod) return;
+    if (items.length === 0 || placing || (!whatsappMode && !paymentMethod)) return;
     if (!isValidBdLocalPhone(form.phone)) {
       setPhoneError("Enter a valid Bangladeshi mobile number, e.g. 17XXXXXXXX.");
       return;
     }
     setPhoneError(null);
+
+    // WhatsApp ordering: no order is created, nothing is tracked and the cart
+    // stays. window.open runs straight from the submit tap (no await before
+    // it), so popup blockers allow it.
+    if (whatsappMode) {
+      if (waUrl) window.open(waUrl, "_blank", "noopener");
+      return;
+    }
 
     // Manual payment collects the sending number + transaction id inside
     // its own branded modal (opened here, at final submit) instead of an
@@ -395,6 +450,7 @@ export function CheckoutPageClient({
 
             {/* Only what the merchant actually enabled in Settings → Payments.
              * No fabricated COD default: if nothing is enabled, say so honestly. */}
+            {!whatsappMode ? (
             <section className="rounded-xl border border-[var(--border)] bg-white p-5">
               <h2 className="text-sm font-semibold text-[var(--foreground)]">
                 Payment method
@@ -455,6 +511,7 @@ export function CheckoutPageClient({
                 </div>
               )}
             </section>
+            ) : null}
           </div>
 
           <aside className="h-fit rounded-xl border border-[var(--border)] bg-white p-5 lg:col-span-5">
@@ -510,6 +567,43 @@ export function CheckoutPageClient({
               </div>
             ) : null}
 
+            {showWaStep ? (
+              <div className="mt-5 space-y-3 text-sm text-[var(--foreground)]">
+                <p>
+                  This store is taking orders on WhatsApp right now.
+                  {limit?.transactionId
+                    ? " If you already sent payment, send your transaction ID on WhatsApp."
+                    : ""}
+                </p>
+                {waUrl ? (
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener"
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white text-sm font-semibold text-[var(--foreground)] transition-colors hover:border-[#25D366]/50 hover:bg-[#25D366]/5"
+                  >
+                    <Image src="/assets/whatsapp.svg" alt="" width={18} height={18} />
+                    Order on WhatsApp
+                  </a>
+                ) : phone ? (
+                  <a href={`tel:${phone}`} className="font-semibold text-[var(--brand)]">
+                    Call {phone}
+                  </a>
+                ) : (
+                  <Link href="/contact" className="font-semibold text-[var(--brand)]">
+                    Contact the store
+                  </Link>
+                )}
+              </div>
+            ) : whatsappMode ? (
+              <button
+                type="submit"
+                className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--theme-btn-radius)] border border-[var(--border)] bg-white text-sm font-semibold text-[var(--foreground)] transition-colors hover:border-[#25D366]/50 hover:bg-[#25D366]/5"
+              >
+                <Image src="/assets/whatsapp.svg" alt="" width={18} height={18} />
+                Order on WhatsApp
+              </button>
+            ) : (
             <button
               type="submit"
               disabled={placing || !paymentMethod || (needsChallenge && !v2Token)}
@@ -517,6 +611,7 @@ export function CheckoutPageClient({
             >
               {placing ? "Placing order…" : "Place order"}
             </button>
+            )}
             <div className="mt-3">
               <RecaptchaDisclosure />
             </div>

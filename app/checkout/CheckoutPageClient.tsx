@@ -235,6 +235,8 @@ export function CheckoutPageClient({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Already sent to WhatsApp: Enter in a field must not submit again.
+    if (limit) return;
     if (items.length === 0 || placing || (!whatsappMode && !paymentMethod)) return;
     if (!isValidBdLocalPhone(form.phone)) {
       setPhoneError("Enter a valid Bangladeshi mobile number, e.g. 17XXXXXXXX.");

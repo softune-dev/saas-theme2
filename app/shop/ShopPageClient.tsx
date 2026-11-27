@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { Filter, Plus, X } from "lucide-react";
 import type { Event, Product, ProductCategory } from "@/lib/theme-types";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -204,15 +203,12 @@ export function ShopPageClient({
         )}
         <div className="absolute inset-0 z-0 bg-black/45" />
         <div className="relative z-10 w-full max-w-4xl px-6 text-center text-white">
-          <motion.h1
+          <h1
             key={displayTitle}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="text-3xl font-bold tracking-tight text-white drop-shadow-md sm:text-5xl md:text-6xl"
           >
             {displayTitle}
-          </motion.h1>
+          </h1>
         </div>
       </div>
 
@@ -322,20 +318,13 @@ export function ShopPageClient({
 
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5">
-                <AnimatePresence mode="popLayout">
                   {filteredProducts.map((p) => (
-                    <motion.div
+                    <div
                       key={p.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.97 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      transition={{ duration: 0.28 }}
                     >
                       <ProductCard product={p} />
-                    </motion.div>
+                    </div>
                   ))}
-                </AnimatePresence>
               </div>
             ) : (
               <div className="py-20 text-center">

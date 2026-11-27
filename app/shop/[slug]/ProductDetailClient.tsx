@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, Star, Truck } from "lucide-react";
 import type { Product } from "@/lib/theme-types";
 import { formatTaka, calculateDiscount } from "@/lib/utils";
@@ -160,10 +159,7 @@ export function ProductDetailClient({
       <section className="mx-auto mt-5 grid w-full max-w-[1280px] flex-1 grid-cols-1 gap-6 px-3 sm:px-4 md:mt-7 md:grid-cols-2 md:gap-10 lg:gap-12 [&>*]:min-w-0">
         {/* Gallery */}
         <div className="space-y-3">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
+          <div
             className="relative aspect-square overflow-hidden rounded-2xl bg-white"
           >
             {resolvedCombo?.image || colorImage || sizeImage || product.images[activeImage] || product.images[0] ? (
@@ -181,7 +177,7 @@ export function ProductDetailClient({
                 -{discount}%
               </span>
             ) : null}
-          </motion.div>
+          </div>
 
           {product.images.length > 1 ? (
             <div className="flex w-full max-w-full gap-2 overflow-x-auto pb-0.5">
@@ -215,10 +211,7 @@ export function ProductDetailClient({
         </div>
 
         {/* Buy panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.06 }}
+        <div
           className="space-y-5 md:sticky md:top-24 md:self-start"
         >
           <div className="space-y-3">
@@ -455,7 +448,7 @@ export function ProductDetailClient({
               Free delivery on this item
             </p>
           ) : null}
-        </motion.div>
+        </div>
       </section>
 
       {(product.description ||
